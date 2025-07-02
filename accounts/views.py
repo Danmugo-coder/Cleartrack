@@ -224,3 +224,16 @@ def request_demo_view(request):
             messages.error(request, f'Failed to send demo request: {e}')
 
     return render(request, 'accounts/request_demo.html')
+from django.http import HttpResponse
+from django.contrib.auth import get_user_model
+
+def create_my_superuser(request):
+    User = get_user_model()
+    if not User.objects.filter(username='Danmugo').exists():
+        User.objects.create_superuser(
+            username='Danmugo',
+            email='danmugo42@gmail.com',
+            password='Mugo@ClearTrack2025'
+        )
+        return HttpResponse("Superuser created: Danmugo / Mugo@ClearTrack2025")
+    return HttpResponse("Superuser already exists.")

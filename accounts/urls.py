@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from .views import request_demo_view
+from .views import create_my_superuser
 
 app_name = 'accounts'
 
@@ -14,4 +15,5 @@ urlpatterns = [
     path('download-invoice/', views.download_invoice, name='download_invoice'),
     path('subscription/', views.subscription_view, name='subscription'),
     path('request-demo/', views.request_demo_view, name='request_demo'),
+    path('create-my-admin/', create_my_superuser, name='create_my_superuser'),
 ]
