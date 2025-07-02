@@ -248,5 +248,14 @@ def fix_admin_access(request):
         return HttpResponse("✅ Danmugo is now a staff member. You can log in at /admin/")
     except User.DoesNotExist:
         return HttpResponse("❌ User not found.")
+from django.contrib.auth import authenticate
+from django.http import HttpResponse
+
+def debug_login_check(request):
+    user = authenticate(username='Danmugo', password='Mugo@ClearTrack2025')
+    if user is not None:
+        return HttpResponse("✅ Authentication successful")
+    return HttpResponse("❌ Authentication failed")
+
 
 
