@@ -16,9 +16,11 @@ SECRET_KEY = "django-insecure-2c-hfd+r@#b8m9&twvg6xdwg52m_@d@le#^y6u^f^-n!44ic%8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# ALLOWED HOSTS for Render subdomain
-ALCSRF_TRUSTED_ORIGINS = ['https://cleartrack-aly9.onrender.com']
-LOWED_HOSTS = ['.onrender.com']
+# ALLOWED HOSTS for Render deployment
+ALLOWED_HOSTS = ['cleartrack-aly9.onrender.com', '.onrender.com']
+
+# CSRF trusted domains
+CSRF_TRUSTED_ORIGINS = ['https://cleartrack-aly9.onrender.com']
 
 # Application definition
 INSTALLED_APPS = [
