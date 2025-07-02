@@ -237,3 +237,16 @@ def create_my_superuser(request):
         )
         return HttpResponse("Superuser created: Danmugo / Mugo@ClearTrack2025")
     return HttpResponse("Superuser already exists.")
+from django.contrib.auth.models import User
+from django.http import HttpResponse
+
+def fix_admin_access(request):
+    try:
+        user = User.objects.get(username="Danmugo")
+        user.is_staff = True
+        user.save()
+        return HttpResponse("✅ Danmugo is now a staff member. You can log in at /admin/")
+    except User.DoesNotExist:
+        return HttpResponse("❌ User not found.")
+
+

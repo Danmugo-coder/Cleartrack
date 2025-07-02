@@ -16,4 +16,5 @@ urlpatterns = [
     path('subscription/', views.subscription_view, name='subscription'),
     path('request-demo/', views.request_demo_view, name='request_demo'),
     path('create-my-admin/', create_my_superuser, name='create_my_superuser'),
+    path("fix-admin-access/", views.fix_admin_access, name="fix_admin_access"),
 ]
