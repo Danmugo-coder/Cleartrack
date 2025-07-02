@@ -227,35 +227,19 @@ def request_demo_view(request):
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 
+from django.http import HttpResponse
+from django.contrib.auth import get_user_model
+
 def create_my_superuser(request):
     User = get_user_model()
     if not User.objects.filter(username='Danmugo').exists():
-        User.objects.create_superuser(
+        user = User.objects.create_superuser(
             username='Danmugo',
             email='danmugo42@gmail.com',
             password='Mugo@ClearTrack2025'
         )
-        return HttpResponse("Superuser created: Danmugo / Mugo@ClearTrack2025")
-    return HttpResponse("Superuser already exists.")
-from django.contrib.auth.models import User
-from django.http import HttpResponse
-
-def fix_admin_access(request):
-    try:
-        user = User.objects.get(username="Danmugo")
         user.is_staff = True
+        user.is_superuser = True
         user.save()
-        return HttpResponse("✅ Danmugo is now a staff member. You can log in at /admin/")
-    except User.DoesNotExist:
-        return HttpResponse("❌ User not found.")
-from django.contrib.auth import authenticate
-from django.http import HttpResponse
-
-def debug_login_check(request):
-    user = authenticate(username='Danmugo', password='Mugo@ClearTrack2025')
-    if user is not None:
-        return HttpResponse("✅ Authentication successful")
-    return HttpResponse("❌ Authentication failed")
-
-
-
+        return HttpResponse("✅ Superuser created. You can now log in at /admin/")
+    return HttpResponse("ℹ️ Superuser already exists.")
