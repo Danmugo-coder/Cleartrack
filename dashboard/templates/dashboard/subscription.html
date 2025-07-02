@@ -1,0 +1,257 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(to right, #f0f4f8, #d9e2ec);
+        font-family: 'Segoe UI', sans-serif;
+        color: #1a202c;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        body {
+            background: #1a1a2e;
+            color: #f0f0f0;
+        }
+        .plan-card {
+            background: rgba(30, 30, 60, 0.9);
+            border-color: #2d2d5f;
+        }
+    }
+
+    .plan-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 30px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        position: relative;
+    }
+
+    .plan-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .plan-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .price {
+        font-size: 2.2rem;
+        font-weight: bold;
+    }
+
+    .price small {
+        font-size: 1rem;
+        color: #718096;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+    }
+
+    .feature-list li {
+        padding: 5px 0;
+    }
+
+    .choose-btn {
+        background-color: #2563eb;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 10px;
+        transition: background 0.3s ease;
+    }
+
+    .choose-btn:hover {
+        background-color: #1d4ed8;
+    }
+
+    .badge-popular {
+        position: absolute;
+        top: -12px;
+        right: -12px;
+        background-color: #facc15;
+        color: #1a202c;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-switch {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .toggle-switch label {
+        margin: 0 10px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 20px;
+    }
+
+    .slider::before {
+        position: absolute;
+        content: "";
+        height: 24px;
+        width: 24px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: #2563eb;
+    }
+
+    input:checked + .slider::before {
+        transform: translateX(30px);
+    }
+</style>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Choose Your Subscription Plan</h2>
+        <p class="text-muted">Pick a plan that suits your business needs. Toggle for monthly or yearly billing.</p>
+        <div class="toggle-switch">
+            <label for="billingToggle">Monthly</label>
+            <label class="switch">
+                <input type="checkbox" id="billingToggle">
+                <span class="slider"></span>
+            </label>
+            <label for="billingToggle">Yearly</label>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Basic Plan -->
+        <div class="col-md-4 col-sm-12">
+            <div class="plan-card text-center">
+                <div class="plan-title">Basic Plan</div>
+                <div class="price" data-monthly="$15" data-yearly="$150">$15 <small>/ month</small></div>
+                <ul class="feature-list">
+                    <li>✔ 3 Admins, 10 Staff</li>
+                    <li>✔ Clearance Automation</li>
+                    <li>✔ QR Generation & Scanning</li>
+                    <li>✔ Email Notifications</li>
+                    <li>✔ Department Management</li>
+                </ul>
+                <form action="{% url 'dashboard:select_payment_method' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="plan" value="basic">
+                    <input type="hidden" name="billing_cycle" value="monthly">
+                    <button type="submit" class="choose-btn w-100">Choose Basic</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="col-md-4 col-sm-12">
+            <div class="plan-card text-center border border-primary">
+                <span class="badge-popular">Most Popular</span>
+                <div class="plan-title">Pro Plan</div>
+                <div class="price" data-monthly="$25" data-yearly="$250">$25 <small>/ month</small></div>
+                <ul class="feature-list">
+                    <li>✔ Unlimited Admins & Staff</li>
+                    <li>✔ Smart Clearance Workflow</li>
+                    <li>✔ Email & SMS Notifications</li>
+                    <li>✔ Role-Based Dashboards</li>
+                    <li>✔ PDF Reports & Exports</li>
+                </ul>
+                <form action="{% url 'dashboard:select_payment_method' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="plan" value="pro">
+                    <input type="hidden" name="billing_cycle" value="monthly">
+                    <button type="submit" class="choose-btn w-100">Choose Pro</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="col-md-4 col-sm-12">
+            <div class="plan-card text-center border border-success">
+                <div class="plan-title">Enterprise Plan</div>
+                <div class="price" data-monthly="$30" data-yearly="$300">$30 <small>/ month</small></div>
+                <ul class="feature-list">
+                    <li>✔ Everything in Pro</li>
+                    <li>✔ Dedicated Support</li>
+                    <li>✔ Custom Reports & Branding</li>
+                    <li>✔ Priority Feature Requests</li>
+                    <li>✔ Monthly Progress Calls</li>
+                </ul>
+                <form action="{% url 'dashboard:select_payment_method' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="plan" value="enterprise">
+                    <input type="hidden" name="billing_cycle" value="monthly">
+                    <button type="submit" class="choose-btn w-100">Choose Enterprise</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const billingToggle = document.getElementById('billingToggle');
+
+        function updatePricesAndCycle() {
+            const isYearly = billingToggle.checked;
+            const billingType = isYearly ? 'yearly' : 'monthly';
+
+            // Update all visible prices
+            document.querySelectorAll('.price').forEach(el => {
+                const monthly = el.getAttribute('data-monthly');
+                const yearly = el.getAttribute('data-yearly');
+                el.innerHTML = (isYearly ? yearly : monthly) + ' <small>/ ' + billingType + '</small>';
+            });
+
+            // Update all billing_cycle form fields
+            document.querySelectorAll('form').forEach(form => {
+                const field = form.querySelector('input[name="billing_cycle"]');
+                if (field) {
+                    field.value = billingType;
+                }
+            });
+        }
+
+        billingToggle.addEventListener('change', updatePricesAndCycle);
+        updatePricesAndCycle(); // initialize on page load
+    });
+</script>
+{% endblock %}

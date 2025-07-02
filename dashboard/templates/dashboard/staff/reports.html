@@ -1,0 +1,290 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Daily Report - ClearTrack{% endblock %}
+
+{% block page_title %}Today's Clearance Report{% endblock %}
+
+{% block page_actions %}
+{% if not report.submitted %}
+<button type="button" class="btn btn-primary" id="submitReportBtn" {% if report.entries|length == 0 %}disabled{% endif %}>
+    <i class="fas fa-check-circle me-2"></i> Submit Report
+</button>
+{% endif %}
+<button type="button" class="btn btn-info" id="printReportBtn">
+    <i class="fas fa-print me-2"></i> Print Report
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-users me-2 text-primary"></i>
+                            <h5 class="mb-0">Students Signed Today</h5>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <span class="badge bg-primary rounded-pill">{{ report.entries|length }} Students</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if report.entries %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="reportTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Course</th>
+                                    <th>Fields Signed</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student_id, entry in report.entries.items %}
+                                <tr>
+                                    <td><span class="badge bg-dark">{{ entry.school_id }}</span></td>
+                                    <td>{{ entry.student_name }}</td>
+                                    <td><small class="text-muted">{{ entry.course|default:"" }}</small></td>
+                                    <td>
+                                        {% for field in entry.fields %}
+                                        <span class="badge bg-info">{{ field }}</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td><small class="text-muted">{{ entry.time|default:"" }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-clipboard-list text-muted" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="text-muted">No students signed today</h5>
+                        <p class="text-muted mb-3">When you sign student clearances, they will appear here</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-clipboard-check me-2 text-primary"></i>
+                    <h5 class="mb-0">Report Status</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-center mb-4">
+                    <div class="text-center">
+                        <div class="display-1 mb-2">
+                            {% if report.submitted %}
+                                <i class="fas fa-check-circle text-success"></i>
+                            {% else %}
+                                <i class="fas fa-clock text-warning"></i>
+                            {% endif %}
+                        </div>
+                        <h5>
+                            {% if report.submitted %}
+                                Report Submitted
+                            {% else %}
+                                Report Pending
+                            {% endif %}
+                        </h5>
+                    </div>
+                </div>
+                
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                        <span><i class="fas fa-calendar me-2"></i>Date</span>
+                        <span>{{ report.date|date:"F d, Y" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-user-graduate me-2"></i>Students Signed</span>
+                        <span class="badge bg-primary rounded-pill">{{ report.entries|length }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                        <span><i class="fas fa-check-square me-2"></i>Total Fields Signed</span>
+                        <span class="badge bg-primary rounded-pill">{{ total_fields }}</span>
+                    </li>
+                    {% if report.submitted %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-clock me-2"></i>Submitted At</span>
+                        <span>{{ report.updated_at|date:"H:i" }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                {% if report.submitted %}
+                    <div class="alert alert-success mt-3">
+                        <i class="fas fa-check-circle me-2"></i> Your daily report has been submitted. You can view it in your report history.
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Don't forget to submit your report at the end of the day.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    <h5 class="mb-0">Report Information</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <p>Daily reports track the clearance forms you have signed each day. These reports help administrators monitor the clearance process.</p>
+                
+                <p class="mb-0"><strong>Important:</strong></p>
+                <ul>
+                    <li>Submit your report at the end of each day</li>
+                    <li>All signed clearances are automatically tracked</li>
+                    <li>Each day has its own separate report</li>
+                    <li>Previous reports can be viewed in your Report History</li>
+                    <li>You can print your report for your records</li>
+                </ul>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i> When a new day begins, you will automatically get a fresh report. Any unsubmitted reports from previous days will be automatically submitted if they contain data.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Report Confirmation Modal -->
+<div class="modal fade" id="submitReportModal" tabindex="-1" aria-labelledby="submitReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="submitReportModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>Confirm Submission
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to submit your daily report?</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Once submitted, this report cannot be modified. If you need to sign more clearances today, a new report will be created automatically.
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <form action="{% url 'dashboard:staff_reports' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="submit">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-2"></i>Submit Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Submit report button
+        const submitReportBtn = document.getElementById('submitReportBtn');
+        const submitReportModal = new bootstrap.Modal(document.getElementById('submitReportModal'));
+        
+        if (submitReportBtn) {
+            submitReportBtn.addEventListener('click', function() {
+                submitReportModal.show();
+            });
+        }
+        
+        // Print report button
+        const printReportBtn = document.getElementById('printReportBtn');
+        
+        printReportBtn.addEventListener('click', function() {
+            const reportTable = document.getElementById('reportTable');
+            const reportDate = '{{ report.date|date:"F d, Y" }}';
+            const staffName = '{{ user.get_full_name|default:user.username }}';
+            const totalStudents = '{{ report.entries|length }}';
+            const totalFields = '{{ total_fields }}';
+            const status = '{{ report.submitted|yesno:"Submitted,Pending" }}';
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Daily Report - ${reportDate}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { text-align: center; margin-bottom: 5px; }
+                        .subtitle { text-align: center; margin-bottom: 20px; color: #666; }
+                        .report-info { margin-bottom: 20px; }
+                        .report-info table { width: 100%; border-collapse: collapse; }
+                        .report-info td { padding: 8px; }
+                        .report-info td:first-child { font-weight: bold; width: 150px; }
+                        table.data { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        table.data th, table.data td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        table.data th { background-color: #f2f2f2; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Daily Clearance Report</h1>
+                    <div class="subtitle">ClearTrack Student Clearance System</div>
+                    
+                    <div class="report-info">
+                        <table>
+                            <tr>
+                                <td>Staff:</td>
+                                <td>${staffName}</td>
+                            </tr>
+                            <tr>
+                                <td>Date:</td>
+                                <td>${reportDate}</td>
+                            </tr>
+                            <tr>
+                                <td>Total Students:</td>
+                                <td>${totalStudents}</td>
+                            </tr>
+                            <tr>
+                                <td>Total Fields Signed:</td>
+                                <td>${totalFields}</td>
+                            </tr>
+                            <tr>
+                                <td>Status:</td>
+                                <td>${status}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    ${reportTable ? reportTable.outerHTML.replace('id="reportTable"', 'class="data"') : '<p>No entries in this report.</p>'}
+                    
+                    <div class="footer">
+                        <p>Generated on ${new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}</p>
+                    </div>
+                    
+                    '<' + 'script>' +
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(function() { window.close(); }, 500);
+                        }
+                    '</' + 'script>' +
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        });
+    });
+</script>
+{% endblock %} 

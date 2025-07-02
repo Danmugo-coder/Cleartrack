@@ -1,0 +1,211 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Login - SwiftClear{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, #f5f7fe 0%, #dfe7fd 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-bg-shape {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        clip-path: polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%);
+        z-index: 0;
+    }
+
+    .login-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-header {
+        padding: 25px;
+        background: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .login-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .login-logo-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 12px;
+        font-size: 1.5rem;
+        margin-right: 15px;
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .login-logo-text {
+        font-weight: 700;
+        font-size: 1.75rem;
+        color: #212529;
+    }
+
+    .login-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #212529;
+        text-align: center;
+        margin-bottom: 0;
+    }
+
+    .login-subtitle {
+        font-size: 0.95rem;
+        color: #6c757d;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .login-body {
+        padding: 30px;
+        background: white;
+    }
+
+    .form-control {
+        height: 50px;
+        border-radius: 8px;
+        padding-left: 45px;
+        font-size: 0.95rem;
+        border: 1px solid #ced4da;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+
+    .form-floating > label {
+        padding-left: 45px;
+    }
+
+    .login-btn {
+        height: 50px;
+        border-radius: 8px;
+        font-weight: 500;
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        transition: all 0.3s;
+    }
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(67, 97, 238, 0.4);
+    }
+
+    .back-home {
+        display: inline-block;
+        margin-top: 20px;
+        color: #6c757d;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .back-home:hover {
+        color: var(--primary-color);
+    }
+
+    .back-home i {
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content_full %}
+<section class="login-section">
+    <div class="login-bg-shape animate__animated animate__fadeInRight"></div>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="login-card animate__animated animate__fadeInUp">
+                    <div class="login-header">
+                        <div class="login-logo">
+                            <div class="login-logo-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="login-logo-text">SwiftClear</div>
+                        </div>
+                        <h4 class="login-title">Welcome Back!</h4>
+                        <p class="login-subtitle">Sign in to continue to SwiftClear</p>
+                    </div>
+
+                    <div class="login-body">
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="mb-4 position-relative">
+                                <div class="input-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <input type="text" class="form-control" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" placeholder="Username" required>
+                                {% if form.username.errors %}
+                                    <div class="text-danger mt-2">
+                                        {{ form.username.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-4 position-relative">
+                                <div class="input-icon">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <input type="password" class="form-control" id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" placeholder="Password" required>
+                                {% if form.password.errors %}
+                                    <div class="text-danger mt-2">
+                                        {{ form.password.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary login-btn">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="text-center">
+                            <a href="{% url 'core:home' %}" class="back-home">
+                                <i class="fas fa-arrow-left"></i> Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,1065 @@
+{% extends 'core/base.html' %}
+
+{% block title %}ClearTrack - Student Clearance System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero section */
+    .hero-section {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-bg-shape {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0.1;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .hero-title {
+        font-weight: 700;
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+        margin-bottom: 2.5rem;
+        font-weight: 300;
+        max-width: 600px;
+    }
+    
+    .hero-img {
+        width: 800px;
+        height: 300px;
+        max-width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transform: perspective(1000px) rotateY(-10deg);
+        transition: all 0.5s;
+    }
+    
+    .hero-img:hover {
+        transform: perspective(1000px) rotateY(0);
+    }
+    
+    /* Features */
+    .features-section {
+        padding: 100px 0;
+        background-color: #f8f9fa;
+    }
+    
+    .section-title {
+        text-align: center;
+        margin-bottom: 60px;
+        font-weight: 700;
+    }
+    
+    .section-title span {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+    
+    .feature-box {
+        padding: 30px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        height: 100%;
+    }
+    
+    .feature-box:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 70px;
+        height: 70px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        font-size: 1.75rem;
+        margin-bottom: 25px;
+    }
+    
+    .feature-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    /* How it works */
+    .how-works-section {
+        padding: 100px 0;
+        background-color: white;
+    }
+    
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .step-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .steps-container {
+        position: relative;
+    }
+    
+    .steps-container::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        bottom: 20px;
+        left: 20px;
+        width: 2px;
+        background: rgba(67, 97, 238, 0.2);
+        z-index: 0;
+    }
+    
+    .step-box {
+        padding: 30px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+        position: relative;
+        z-index: 1;
+        margin-left: 40px;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+        padding: 80px 0;
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        color: white;
+        text-align: center;
+    }
+    
+    .cta-title {
+        font-weight: 700;
+        margin-bottom: 25px;
+    }
+    
+    .cta-subtitle {
+        margin-bottom: 40px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .btn-cta {
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        border-radius: 50px;
+        background-color: white;
+        color: var(--primary-color);
+        border: none;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+    }
+    
+    .btn-cta:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        color: var(--primary-color);
+    }
+    
+    /* Footer */
+    .footer {
+        background-color: #212529;
+        color: rgba(255, 255, 255, 0.7);
+        padding: 60px 0 30px;
+    }
+    
+    .footer-title {
+        color: white;
+        font-weight: 600;
+        margin-bottom: 25px;
+    }
+    
+    .footer-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .footer-list li {
+        margin-bottom: 10px;
+    }
+    
+    .footer-list a {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .footer-list a:hover {
+        color: white;
+    }
+    
+    .copyright {
+        text-align: center;
+        padding-top: 30px;
+        margin-top: 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-img {
+            margin-top: 40px;
+        }
+        
+        .steps-container::before {
+            display: none;
+        }
+        
+        .step-box {
+            margin-left: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content_full %}
+{% load static %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-bg-shape"></div>
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <h1 class="hero-title animate__animated animate__fadeInUp">ClearTrack Student Clearance System</h1>
+                <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s">Modernize your institution's clearance process with a secure, efficient, and paperless solution.</p>
+                <div class="animate__animated animate__fadeInUp animate__delay-2s d-flex gap-3">
+                    <a href="{% url 'accounts:login' %}" class="btn btn-light btn-lg px-4 py-3 rounded-pill shadow">
+                        <i class="fas fa-sign-in-alt me-2"></i> Login to Dashboard
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#scanQRModal">
+                        <i class="fas fa-qrcode me-2"></i> View My Clearance
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-6 animate__animated animate__fadeInRight animate__delay-1s">
+                <img src="{% static 'images/reg.jpeg' %}" alt="School Logo" class="hero-img">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <h2 class="section-title">
+            <span>FEATURES</span>
+            Streamlined Clearance Process
+        </h2>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h3 class="feature-title">QR Code Authentication</h3>
+                    <p>Secure and instant verification of student identities through unique QR codes, eliminating impersonation risks.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-signature"></i>
+                    </div>
+                    <h3 class="feature-title">Digital Signatures</h3>
+                    <p>Authorized staff can digitally sign clearance forms, providing a secure and verifiable approval process.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="feature-title">Real-time Analytics</h3>
+                    <p>Comprehensive dashboards and reports provide insights into the clearance process and student progress.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Mobile Responsive</h3>
+                    <p>Access the system from any device, allowing staff to sign clearances from smartphones or tablets.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h3 class="feature-title">Daily Reports</h3>
+                    <p>Automated daily reports track clearance progress, ensuring accountability and transparency.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3 class="feature-title">Role-Based Access</h3>
+                    <p>Secure access control ensures staff can only sign their designated clearance fields.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-works-section">
+    <div class="container">
+        <h2 class="section-title">
+            <span>SIMPLE PROCESS</span>
+            How ClearTrack Works
+        </h2>
+        
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="steps-container">
+                    <div class="step-box">
+                        <div class="step-number">1</div>
+                        <h3 class="step-title">Student Registration</h3>
+                        <p>Administrators register students in the system or import them in batch via CSV files.</p>
+                    </div>
+                    
+                    <div class="step-box">
+                        <div class="step-number">2</div>
+                        <h3 class="step-title">QR Code Generation</h3>
+                        <p>Each student receives a unique QR code that contains their identity information.</p>
+                    </div>
+                    
+                    <div class="step-box">
+                        <div class="step-number">3</div>
+                        <h3 class="step-title">Clearance Assignment</h3>
+                        <p>Administrators create clearance templates and assign clearance fields to appropriate staff.</p>
+                    </div>
+                    
+                    <div class="step-box">
+                        <div class="step-number">4</div>
+                        <h3 class="step-title">Scanning & Signing</h3>
+                        <p>Staff scan student QR codes and digitally sign their assigned clearance fields.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="steps-container">
+                    <div class="step-box">
+                        <div class="step-number">5</div>
+                        <h3 class="step-title">Daily Reporting</h3>
+                        <p>Staff submit daily reports of signed clearances for administrative review.</p>
+                    </div>
+                    
+                    <div class="step-box">
+                        <div class="step-number">6</div>
+                        <h3 class="step-title">Progress Tracking</h3>
+                        <p>Administrators monitor clearance progress through comprehensive analytics dashboards.</p>
+                    </div>
+                    
+                    <div class="step-box">
+                        <div class="step-number">7</div>
+                        <h3 class="step-title">Final Approval</h3>
+                        <p>Once all fields are signed, administrators provide final approval signatures.</p>
+                    </div>
+                    
+                    <div class="step-box">
+                        <div class="step-number">8</div>
+                        <h3 class="step-title">Clearance Completion</h3>
+                        <p>Students receive completed digital clearance forms, accessible anytime.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dashboard Preview Section -->
+<section class="features-section bg-light py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold display-6 text-primary">🌐 Discover the ClearTrack Experience</h2>
+      <p class="text-muted lead">A seamless, intuitive dashboard crafted for modern educational institutions.</p>
+    </div>
+
+    <div id="dashboardCarousel" class="carousel slide shadow rounded-4 overflow-hidden" data-bs-ride="carousel">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="{% static 'images/dashboard1.png' %}" class="d-block w-100 img-fluid" style="max-height: 500px; object-fit: cover;" alt="Dashboard 1">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'images/dashboard2.png' %}" class="d-block w-100 img-fluid" style="max-height: 500px; object-fit: cover;" alt="Dashboard 2">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'images/dashboard3.png' %}" class="d-block w-100 img-fluid" style="max-height: 500px; object-fit: cover;" alt="Dashboard 3">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'images/dashboard4.png' %}" class="d-block w-100 img-fluid" style="max-height: 500px; object-fit: cover;" alt="Dashboard 4">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'images/dashboard5.png' %}" class="d-block w-100 img-fluid" style="max-height: 500px; object-fit: cover;" alt="Dashboard 5">
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+
+    <!-- Optional indicators -->
+    <div class="carousel-indicators mt-4">
+      <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="0" class="active bg-primary rounded-circle" style="width: 12px; height: 12px;" aria-current="true"></button>
+      <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="1" class="bg-primary rounded-circle" style="width: 12px; height: 12px;"></button>
+      <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="2" class="bg-primary rounded-circle" style="width: 12px; height: 12px;"></button>
+      <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="3" class="bg-primary rounded-circle" style="width: 12px; height: 12px;"></button>
+      <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="4" class="bg-primary rounded-circle" style="width: 12px; height: 12px;"></button>
+    </div>
+  </div>
+</section>
+
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <h2 class="cta-title">Ready to modernize your clearance process?</h2>
+        <p class="cta-subtitle">Join institutions that have transformed their student clearance workflow with ClearTrack.</p>
+        <a href="http://127.0.0.1:8000/accounts/login/" class="btn btn-cta">
+            Get Started Today
+        </a>
+    </div>
+</section>
+</section>
+<section class="py-5" style="background-color: #f4f6ff;">
+    <div class="container">
+        <!-- Title -->
+        <div class="text-center mb-5">
+            <h2 class="fw-bold display-5">Why Institutions Trust <span style="color: #5a61f2;">ClearTrack</span></h2>
+            <p class="text-muted fs-5">Redefining student clearance for the digital age – fast, secure, and effortless.</p>
+        </div>
+
+        <!-- Features -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="bg-white p-4 shadow rounded text-center h-100">
+                    <i class="fas fa-clock fa-3x mb-3" style="color: #5a61f2;"></i>
+                    <h5 class="fw-bold">Lightning-Fast Clearance</h5>
+                    <p class="text-muted">Say goodbye to long queues and paperwork. ClearTrack automates clearance approvals and document flow, making it a seamless experience for students and administrators.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="bg-white p-4 shadow rounded text-center h-100">
+                    <i class="fas fa-shield-alt fa-3x mb-3" style="color: #5a61f2;"></i>
+                    <h5 class="fw-bold">Top-Grade Security</h5>
+                    <p class="text-muted">Your data is encrypted and safely stored, protecting sensitive academic records and clearance data while ensuring only authorized access.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="bg-white p-4 shadow rounded text-center h-100">
+                    <i class="fas fa-mobile-alt fa-3x mb-3" style="color: #5a61f2;"></i>
+                    <h5 class="fw-bold">Mobile & Web Access</h5>
+                    <p class="text-muted">ClearTrack is fully responsive and accessible across all devices, allowing stakeholders to clear students or check progress from anywhere at any time.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Benefits -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="bg-white p-4 shadow rounded h-100">
+                    <h5 class="fw-bold"><i class="fas fa-chart-pie me-2" style="color: #5a61f2;"></i> Real-Time Reporting</h5>
+                    <p class="text-muted">Admins can monitor clearance statuses, view analytics, generate reports, and make data-driven decisions through an intuitive dashboard.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="bg-white p-4 shadow rounded h-100">
+                    <h5 class="fw-bold"><i class="fas fa-plug me-2" style="color: #5a61f2;"></i> Easy Integration</h5>
+                    <p class="text-muted">ClearTrack can integrate with your existing systems (student records, library, finance, etc.) to ensure a smooth and efficient clearance ecosystem.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonials -->
+        <div class="bg-white p-5 rounded shadow mb-5">
+            <h4 class="text-center fw-bold mb-4" style="color: #5a61f2;">Trusted by Institutions, Loved by Users</h4>
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <p class="fst-italic">"We’ve cleared thousands of students in record time. ClearTrack made our clearance process completely digital and headache-free."</p>
+                    <small class="text-muted">— Registrar, Metropolitan University</small>
+                </div>
+                <div class="col-md-4">
+                    <p class="fst-italic">"As a student, I didn’t expect clearance to be this smooth. It felt like magic!"</p>
+                    <small class="text-muted">— Final Year Student, Tech Institute</small>
+                </div>
+                <div class="col-md-4">
+                    <p class="fst-italic">"The platform is clean, simple, and efficient. ClearTrack has been a game-changer for our admin team."</p>
+                    <small class="text-muted">— IT Director, East Africa College</small>
+                </div>
+            </div>
+        </div>
+
+   <!-- Call to Action -->
+<div class="text-center">
+    <h3 class="fw-bold mb-3">Join forward-thinking institutions using ClearTrack</h3>
+    <a href="http://127.0.0.1:8000/accounts/login/" class="btn btn-lg px-5" style="background-color: #5a61f2; color: #fff;">
+        Get Started Now
+    </a>
+</div>
+
+</section>
+<!-- Demo Preview Section -->
+<section class="py-5 bg-white border-top">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold display-5 text-primary">See ClearTrack in Action</h2>
+            <p class="text-muted fs-5">A quick preview of how ClearTrack simplifies your clearance process from start to finish.</p>
+        </div>
+
+        <!-- Demo Box -->
+        <div class="ratio ratio-16x9 shadow-lg rounded overflow-hidden mb-4" style="max-width: 960px; margin: 0 auto;">
+            <!-- Placeholder Image or Preview Video -->
+            <iframe 
+                src="https://www.youtube.com/embed/VIDEO_ID_HERE" 
+                title="ClearTrack Demo" 
+                allowfullscreen 
+                class="w-100 h-100 border-0"
+                style="background-color: #f5f5f5;">
+            </iframe>
+        </div>
+
+        <div class="text-center">
+            <a href="{% url 'accounts:request_demo' %}" class="btn btn-primary btn-lg px-4 mt-3">Request a Full Demo</a>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-5" style="background: linear-gradient(135deg, #273F92, #03A550); color: white;" id="faq">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <h2 class="fw-bold display-6">Frequently Asked Questions</h2>
+      <p class="lead">Everything you need to know before using ClearTrack</p>
+    </div>
+
+    <div class="accordion" id="faqAccordion">
+
+      <div class="accordion-item bg-transparent border-0 mb-3" data-aos="fade-up">
+        <h2 class="accordion-header" id="faqHeadingOne">
+          <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+            What is ClearTrack and who is it for?
+          </button>
+        </h2>
+        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body bg-light text-dark">
+            ClearTrack is a student clearance system designed for academic institutions to manage the clearance process online — fast, paperless, and secure.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item bg-transparent border-0 mb-3" data-aos="fade-up">
+        <h2 class="accordion-header" id="faqHeadingTwo">
+          <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+            How does the clearance process work?
+          </button>
+        </h2>
+        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body bg-light text-dark">
+            Students log in, complete clearance items, upload any required documents, and view real-time approvals from departments like finance, library, etc.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item bg-transparent border-0 mb-3" data-aos="fade-up">
+        <h2 class="accordion-header" id="faqHeadingThree">
+          <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+            Is my data safe on ClearTrack?
+          </button>
+        </h2>
+        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body bg-light text-dark">
+            Yes. We follow industry-standard encryption, role-based access, and audit logs to keep every action accountable and secure.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item bg-transparent border-0 mb-3" data-aos="fade-up">
+        <h2 class="accordion-header" id="faqHeadingFour">
+          <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+            Can I try ClearTrack before subscribing?
+          </button>
+        </h2>
+        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body bg-light text-dark">
+            Absolutely! You get a 14-day free trial with full features. After that, you'll be prompted to choose a plan to continue.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item bg-transparent border-0 mb-3" data-aos="fade-up">
+        <h2 class="accordion-header" id="faqHeadingFive">
+          <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+            Who do I contact for more questions or support?
+          </button>
+        </h2>
+        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body bg-light text-dark">
+            Contact us via <strong>support@cleartrack@gmail.com</strong> or <strong>danmugoS42@gmail.com</strong>. You can also call <strong>+254 799 766 904</strong>.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-5 mb-4">
+                <h4 class="footer-title">ClearTrack</h4>
+                <p>A comprehensive student clearance management system designed for educational institutions.</p>
+                <div class="mt-4">
+                    <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="text-white"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            
+      <div class="col-lg-3 col-md-6 mb-4">
+    <h5 class="footer-title">Features</h5>
+    <ul class="footer-list list-unstyled">
+        <li><a href="#">QR Authentication</a></li>
+        <li><a href="#">Digital Signatures</a></li>
+        <li><a href="#">Real-time Analytics</a></li>
+        <li><a href="#">Daily Reports</a></li>
+        <li><a href="#">User Role Management</a></li>
+        <li><a href="#">Secure Cloud Backup</a></li>
+        <li><a href="#">Multi-user Collaboration</a></li>
+        <li><a href="#">Subscription & Trial Control</a></li>
+    </ul>
+</div>
+      
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <h5 class="footer-title">Contact Us</h5>
+                <ul class="footer-list">
+                    <li><i class="fas fa-envelope me-2"></i> support@cleartrack.gmail.com</li>
+                    <li><i class="fas fa-phone me-2"></i> +254 799766904</li>
+                    <li><i class="fas fa-map-marker-alt me-2"></i> Nairobi, Kenya</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>© 2025 ClearTrack. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<!-- QR Scanner Modal -->
+<div class="modal fade" id="scanQRModal" tabindex="-1" aria-labelledby="scanQRModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="scanQRModalLabel"><i class="fas fa-qrcode me-2"></i> Scan Clearance QR Code</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="scan-area mb-4" style="position: relative; border-radius: 10px; overflow: hidden; border: 2px dashed #4361ee; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); height: 300px;">
+                            <div id="qr-reader" style="width: 100%; height: 100%;"></div>
+                            <div class="scan-overlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.1); align-items: center; justify-content: center; z-index: 10;">
+                                <div class="scan-target" style="width: 200px; height: 200px; border: 2px solid #fff; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); position: relative;">
+                                    <div class="scan-line" style="position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, rgba(67, 97, 238, 0), rgba(67, 97, 238, 0.8), rgba(67, 97, 238, 0)); top: 0; box-shadow: 0 0 8px 2px rgba(67, 97, 238, 0.5); opacity: 0;"></div>
+                                    <div class="scan-corners" style="position: absolute; width: 200px; height: 200px; pointer-events: none;"><span></span></div>
+                                </div>
+                            </div>
+                            <!-- Placeholder text when camera is not active -->
+                            <div id="camera-placeholder" class="d-flex flex-column align-items-center justify-content-center h-100 text-center p-4">
+                                <i class="fas fa-camera text-primary mb-3" style="font-size: 3rem;"></i>
+                                <h5 class="text-primary">Camera Not Active</h5>
+                                <p class="text-muted mb-0">Click "Start Camera" below to begin scanning</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 mb-4">
+                            <button id="start-scan" class="btn btn-primary flex-grow-1 py-2">
+                                <i class="fas fa-camera me-2"></i> Start Camera
+                            </button>
+                            <button id="switch-camera" class="btn btn-secondary flex-grow-1 py-2" disabled>
+                                <i class="fas fa-sync-alt me-2"></i> Switch Camera
+                            </button>
+                            <button id="stop-scan" class="btn btn-outline-secondary flex-grow-1 py-2" disabled>
+                                <i class="fas fa-stop me-2"></i> Stop Camera
+                            </button>
+                        </div>
+                        
+                        <form method="post" id="qr-form" action="{% url 'core:scan_clearance' %}" class="bg-light p-3 rounded-3 border">
+                            {% csrf_token %}
+                            <div class="mb-0">
+                                <label for="token" class="form-label fw-bold">Manual Token Entry</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="token" name="token" placeholder="Enter clearance token" required>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-2"></i> View
+                                    </button>
+                                </div>
+                                <div class="form-text">If scanning doesn't work, enter your clearance token manually.</div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-5">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Instructions</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol class="ps-3">
+                                    <li class="mb-2">Click "Start Camera" to activate your device's camera</li>
+                                    <li class="mb-2">Use "Switch Camera" if needed to change between front and rear cameras</li>
+                                    <li class="mb-2">Position your student QR code within the scanning area</li>
+                                    <li class="mb-2">The system will automatically detect and verify your clearance</li>
+                                </ol>
+                                <div class="alert alert-info mt-3 mb-0">
+                                    <i class="fas fa-info-circle me-2"></i> If the camera doesn't work, you can manually enter your clearance token in the input field.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center d-none d-md-block">
+                            <img src="{% static 'images/ClearTrack.png' %}" alt="QR Code Scanning" class="img-fluid" style="max-height: 150px; opacity: 0.7;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="success-feedback" id="success-feedback" style="position: fixed; top: 20px; right: 20px; background: rgba(25, 135, 84, 0.9); color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); z-index: 1050; display: flex; align-items: center; opacity: 0; transform: translateY(-20px); transition: all 0.3s;">
+    <i class="fas fa-check-circle me-2" style="font-size: 1.5rem;"></i>
+    <div>
+        <h6 class="mb-0">QR Code Detected!</h6>
+        <p class="mb-0 small">Redirecting to your clearance...</p>
+    </div>
+</div>
+
+<style>
+    @keyframes scanAnimation {
+        0% { top: 0; }
+        100% { top: 200px; }
+    }
+    
+    .scanning .scan-line {
+        opacity: 1 !important;
+        animation: scanAnimation 2s linear infinite;
+    }
+    
+    /* Corner styles */
+    .scan-corners::before,
+    .scan-corners::after,
+    .scan-corners span::before,
+    .scan-corners span::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-color: #4361ee;
+        border-style: solid;
+        border-width: 0;
+    }
+    
+    /* Top left corner */
+    .scan-corners::before {
+        top: 0;
+        left: 0;
+        border-top-width: 3px;
+        border-left-width: 3px;
+        border-top-left-radius: 8px;
+    }
+    
+    /* Top right corner */
+    .scan-corners::after {
+        top: 0;
+        right: 0;
+        border-top-width: 3px;
+        border-right-width: 3px;
+        border-top-right-radius: 8px;
+    }
+    
+    /* Bottom left corner */
+    .scan-corners span::before {
+        bottom: 0;
+        left: 0;
+        border-bottom-width: 3px;
+        border-left-width: 3px;
+        border-bottom-left-radius: 8px;
+    }
+    
+    /* Bottom right corner */
+    .scan-corners span::after {
+        bottom: 0;
+        right: 0;
+        border-bottom-width: 3px;
+        border-right-width: 3px;
+        border-bottom-right-radius: 8px;
+    }
+    
+    .success-feedback.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    #scanQRModal .modal-content {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    #scanQRModal .btn {
+        border-radius: 6px;
+    }
+</style>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startButton = document.getElementById('start-scan');
+        const stopButton = document.getElementById('stop-scan');
+        const switchButton = document.getElementById('switch-camera');
+        const tokenInput = document.getElementById('token');
+        const qrForm = document.getElementById('qr-form');
+        const scanArea = document.querySelector('.scan-area');
+        const scanOverlay = document.querySelector('.scan-overlay');
+        const successFeedback = document.getElementById('success-feedback');
+        const cameraPlaceholder = document.getElementById('camera-placeholder');
+        
+        let html5QrCode = null;
+        let currentFacingMode = 'environment'; // Default to back camera
+        
+        // Start camera
+        startButton.addEventListener('click', function() {
+            startCamera();
+        });
+        
+        // Stop camera
+        stopButton.addEventListener('click', function() {
+            stopCamera();
+        });
+        
+        // Switch camera
+        switchButton.addEventListener('click', function() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+                    startCamera();
+                }).catch(err => {
+                    console.error("Error stopping camera:", err);
+                });
+            }
+        });
+        
+        // Reset scanner when modal is hidden
+        document.getElementById('scanQRModal').addEventListener('hidden.bs.modal', function () {
+            stopCamera();
+        });
+        
+        function startCamera() {
+            const qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
+                let minEdgePercentage = 0.8;
+                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                return {
+                    width: qrboxSize,
+                    height: qrboxSize
+                };
+            };
+            
+            const config = { 
+                fps: 10,
+                qrbox: qrboxFunction,
+                aspectRatio: 1.3,
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+            };
+            
+            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            html5QrCode.start(
+                { facingMode: currentFacingMode },
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).then(() => {
+                scanOverlay.style.display = "flex";
+                scanArea.classList.add('scanning');
+                cameraPlaceholder.style.display = "none";
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                switchButton.disabled = false;
+            }).catch((err) => {
+                console.error("Camera error:", err);
+                alert("Could not access the camera. Please check permissions or try another device.");
+            });
+        }
+        
+        function stopCamera() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    scanOverlay.style.display = "none";
+                    scanArea.classList.remove('scanning');
+                    cameraPlaceholder.style.display = "flex";
+                    startButton.disabled = false;
+                    stopButton.disabled = true;
+                    switchButton.disabled = true;
+                }).catch((err) => {
+                    console.error("Error stopping camera:", err);
+                });
+            }
+        }
+        
+        // Process QR code success
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log("QR Code detected:", decodedText);
+            processQrToken(decodedText);
+        }
+        
+        // Process QR code failure
+        function onScanFailure(error) {
+            console.debug(`QR scan failure: ${error}`);
+        }
+        
+        // Process token from QR code and navigate
+        function processQrToken(rawData) {
+            stopCamera();
+            
+            // Clean up the raw data
+            let token = rawData.trim();
+            
+            // Try to extract UUID from any format
+            const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+            const uuidMatch = token.match(uuidRegex);
+            
+            if (uuidMatch) {
+                token = uuidMatch[0];
+                console.log("Found UUID in QR code:", token);
+            } else {
+                try {
+                    // If it looks like a URL or path
+                    if (token.includes('/') || token.includes('://')) {
+                        if (!token.includes('://')) {
+                            token = window.location.origin + (token.startsWith('/') ? '' : '/') + token;
+                        }
+                        
+                        // Parse the URL
+                        const url = new URL(token);
+                        const pathSegments = url.pathname.split('/').filter(segment => segment.length > 0);
+                        
+                        // Use the last non-empty segment
+                        if (pathSegments.length > 0) {
+                            token = pathSegments[pathSegments.length - 1];
+                            console.log("Using last path segment as token:", token);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error processing potential URL:", e);
+                }
+            }
+            
+            if (!token || token.trim() === '') {
+                alert("Could not extract a valid token from the QR code. Please try again or enter your token manually.");
+                return;
+            }
+            
+            // Show success feedback
+            showSuccessFeedback();
+            
+            // Build the URL with proper path and token
+            const viewUrl = `/view-clearance/${encodeURIComponent(token)}/`;
+            
+            // Navigate after a short delay
+            setTimeout(() => {
+                window.location.href = viewUrl;
+            }, 1000);
+        }
+        
+        // Show success feedback
+        function showSuccessFeedback() {
+            try {
+                const beep = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBhxQoN/zsXAjChZHltzxtHQrEBlEjtXusXcyFx1EicnirXo6ICFEgb3dpH9DKSZD...");
+                beep.volume = 0.2;
+                beep.play().catch(e => console.log("Audio play failed:", e));
+            } catch (e) {
+                console.log("Could not play sound");
+            }
+            
+            // Show visual feedback
+            successFeedback.classList.add('show');
+            setTimeout(() => {
+                successFeedback.classList.remove('show');
+            }, 3000);
+        }
+    });
+</script>
+{% endblock %}

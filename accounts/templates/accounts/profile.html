@@ -1,0 +1,541 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Profile - ClearTrack{% endblock %}
+
+{% block page_title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .profile-header-bg {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        opacity: 0.1;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .profile-name {
+        color: white;
+        font-weight: 700;
+        font-size: 1.75rem;
+        margin-bottom: 5px;
+    }
+    
+    .profile-role {
+        display: inline-block;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .profile-info-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        height: 100%;
+    }
+    
+    .profile-info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .info-item {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-right: 15px;
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0;
+    }
+    
+    .signature-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        overflow: hidden;
+    }
+    
+    .signature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .signature-tabs .nav-link {
+        border: none;
+        border-radius: 0;
+        padding: 12px 20px;
+        font-weight: 500;
+        color: #6c757d;
+        position: relative;
+    }
+    
+    .signature-tabs .nav-link.active {
+        color: var(--primary-color);
+        background-color: transparent;
+    }
+    
+    .signature-tabs .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--primary-color);
+    }
+    
+    .signature-pad-container {
+        border: 2px dashed rgba(0, 0, 0, 0.1) !important;
+        border-radius: 10px;
+        background-color: #f8f9fa;
+        cursor: crosshair;
+        transition: all 0.3s;
+    }
+    
+    .signature-pad-container:hover {
+        border-color: rgba(67, 97, 238, 0.5) !important;
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.1);
+    }
+    
+    #signatureCanvas {
+        border: none !important;
+        width: 100%;
+        height: 200px;
+    }
+    
+    .signature-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .signature-actions button {
+        flex: 1;
+        border-radius: 8px;
+        padding: 8px 15px;
+    }
+    
+    .current-signature {
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100px;
+        margin-bottom: 20px;
+    }
+    
+    .signature-image {
+        max-height: 80px;
+        max-width: 100%;
+    }
+    
+    .custom-file-upload {
+        display: block;
+        padding: 15px;
+        border: 2px dashed rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        background-color: #f8f9fa;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .custom-file-upload:hover {
+        border-color: rgba(67, 97, 238, 0.5);
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.1);
+    }
+    
+    .custom-file-upload i {
+        font-size: 2rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    
+    .save-btn {
+        padding: 12px 25px;
+        font-weight: 500;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        transition: all 0.3s;
+    }
+    
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="profile-header-bg"></div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <h2 class="profile-name">{{ user.get_full_name|default:user.username }}</h2>
+            <span class="profile-role">{{ user.profile.get_user_type_display }}</span>
+        </div>
+        <div class="col-md-6 d-flex align-items-center justify-content-md-end mt-4 mt-md-0">
+            <div class="text-white">
+                <h5><i class="fas fa-envelope me-2"></i> {{ user.email }}</h5>
+                <h5><i class="fas fa-user-circle me-2"></i> {{ user.username }}</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="profile-info-card">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2 text-primary"></i> Account Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <p class="info-label">Username</p>
+                        <p class="info-value">{{ user.username }}</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div>
+                        <p class="info-label">Full Name</p>
+                        <p class="info-value">{{ user.get_full_name }}</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div>
+                        <p class="info-label">Email Address</p>
+                        <p class="info-value">{{ user.email }}</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-user-tag"></i>
+                    </div>
+                    <div>
+                        <p class="info-label">Role</p>
+                        <p class="info-value">{{ user.profile.get_user_type_display }}</p>
+                    </div>
+                </div>
+                
+                {% if user.profile.user_type == 'staff' or user.profile.user_type == 'user' %}
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <div class="w-100">
+                        <p class="info-label">Auto-Sign Mode</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="info-value mb-0">{{ user.profile.auto_sign|yesno:"Enabled,Disabled" }}</p>
+                            <form method="post" action="{% url 'accounts:toggle_auto_sign' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm {% if user.profile.auto_sign %}btn-success{% else %}btn-outline-secondary{% endif %}">
+                                    {% if user.profile.auto_sign %}
+                                        <i class="fas fa-toggle-on me-1"></i> On
+                                    {% else %}
+                                        <i class="fas fa-toggle-off me-1"></i> Off
+                                    {% endif %}
+                                </button>
+                            </form>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            {% if user.profile.auto_sign %}
+                                All your assigned fields will be automatically signed when scanning a QR code.
+                            {% else %}
+                                You will need to manually sign each field after scanning a QR code.
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8 col-md-6 mb-4">
+        <div class="signature-card">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-signature me-2 text-primary"></i> My Signature
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="current-signature mb-4">
+                    {% if user.profile.signature %}
+                        <img src="{{ user.profile.signature.url }}" alt="Your signature" class="signature-image">
+                    {% else %}
+                        <p class="text-muted mb-0">No signature uploaded yet. Please create or upload your signature below.</p>
+                    {% endif %}
+                </div>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.signature_data }}
+                    
+                    <ul class="nav nav-tabs signature-tabs mb-3" id="signatureTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="draw-tab" data-bs-toggle="tab" data-bs-target="#draw" type="button" role="tab" aria-controls="draw" aria-selected="true">
+                                <i class="fas fa-pen me-2"></i> Draw Signature
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" aria-controls="upload" aria-selected="false">
+                                <i class="fas fa-upload me-2"></i> Upload Signature
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="signatureTabsContent">
+                        <div class="tab-pane fade show active" id="draw" role="tabpanel" aria-labelledby="draw-tab">
+                            <p class="text-muted mb-3">Use your mouse or touchscreen to draw your signature below.</p>
+                            <div class="signature-pad-container">
+                                <canvas id="signatureCanvas"></canvas>
+                            </div>
+                            <div class="signature-actions">
+                                <button type="button" id="clearCanvas" class="btn btn-outline-secondary">
+                                    <i class="fas fa-eraser me-2"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+                            <p class="text-muted mb-3">Upload a signature image file (PNG or JPG format preferred).</p>
+                            <label class="custom-file-upload" for="id_signature">
+                                <i class="fas fa-cloud-upload-alt d-block"></i>
+                                <span>Click to browse or drag and drop</span>
+                                <span class="small d-block mt-1">Maximum file size: 5MB</span>
+                            </label>
+                            {{ form.signature }}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary save-btn w-100">
+                            <i class="fas fa-save me-2"></i> Save Signature
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('signatureCanvas');
+        const clearButton = document.getElementById('clearCanvas');
+        const signatureDataInput = document.getElementById('id_signature_data');
+        const ctx = canvas.getContext('2d');
+        
+        // Resize canvas to fit container
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.offsetWidth;
+            canvas.height = 200;
+        }
+        
+        // Call on load
+        resizeCanvas();
+        
+        // Resize on window resize
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Set up canvas
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        // Variables for drawing
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        
+        // Clear canvas function
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            signatureDataInput.value = '';
+        }
+        
+        // Event listeners for drawing
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        // Touch support
+        canvas.addEventListener('touchstart', handleTouch);
+        canvas.addEventListener('touchmove', handleTouchMove);
+        canvas.addEventListener('touchend', stopDrawing);
+        
+        clearButton.addEventListener('click', clearCanvas);
+        
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+        
+        function stopDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                signatureDataInput.value = canvas.toDataURL('image/png');
+            }
+        }
+        
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const offsetX = touch.clientX - rect.left;
+            const offsetY = touch.clientY - rect.top;
+            
+            isDrawing = true;
+            [lastX, lastY] = [offsetX, offsetY];
+        }
+        
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const offsetX = touch.clientX - rect.left;
+            const offsetY = touch.clientY - rect.top;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(offsetX, offsetY);
+            ctx.stroke();
+            
+            [lastX, lastY] = [offsetX, offsetY];
+        }
+        
+        // Clear canvas initially
+        clearCanvas();
+        
+        // Style file input
+        const fileInput = document.getElementById('id_signature');
+        if (fileInput) {
+            fileInput.classList.add('d-none');
+            
+            const fileLabel = document.querySelector('.custom-file-upload');
+            fileLabel.addEventListener('click', function(e) {
+                e.preventDefault();
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', function() {
+                const fileName = this.files[0]?.name;
+                if (fileName) {
+                    fileLabel.querySelector('span').textContent = fileName;
+                }
+            });
+        }
+        
+        // Form submission handling
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            // Only check for signature if this is a signature form submission
+            // and not the auto-sign toggle form
+            if (this.getAttribute('action') !== "{% url 'accounts:toggle_auto_sign' %}") {
+                if (document.querySelector('#draw-tab').classList.contains('active')) {
+                    // Only validate if no signature exists and no new signature is drawn
+                    const hasExistingSignature = document.querySelector('.signature-image') !== null;
+                    if (!hasExistingSignature && !signatureDataInput.value) {
+                        e.preventDefault();
+                        alert('Please draw your signature or switch to upload.');
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

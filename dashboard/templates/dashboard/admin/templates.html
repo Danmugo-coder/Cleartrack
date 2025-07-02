@@ -1,0 +1,840 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Clearance Templates - ClearTrack{% endblock %}
+
+{% block page_title %}Clearance Templates{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTemplateModal">
+        <i class="fas fa-plus me-2"></i> Create New Template
+    </button>
+    <a href="{% url 'dashboard:admin_clearance' %}" class="btn btn-info">
+        <i class="fas fa-clipboard-list me-2"></i> Manage Clearance Forms
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-edit me-2 text-primary"></i>
+                    <h5 class="mb-0">Create Template</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="templateForm">
+                    <div class="mb-3">
+                        <label for="templateName" class="form-label">Template Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                            <input type="text" class="form-control" id="templateName" name="template_name" value="{{ active_template.name|default:'Default Template' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="departmentSelect" class="form-label">Department</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-building"></i></span>
+                            <select class="form-select" id="departmentSelect" name="department_id">
+                                <option value="">All Departments</option>
+                                {% for department in departments %}
+                                <option value="{{ department.id }}" {% if active_template.department.id == department.id %}selected{% endif %}>{{ department.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <small class="form-text">If selected, this template will only be applied to students in this department.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="yearLevelTarget" class="form-label">Year Level Target</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-users"></i></span>
+                            <select class="form-select" id="yearLevelTarget" name="year_level_target">
+                                <option value="all" {% if active_template.year_level_target == 'all' %}selected{% endif %}>All Year Levels</option>
+                                <option value="1st_to_3rd" {% if active_template.year_level_target == '1st_to_3rd' %}selected{% endif %}>1st to 3rd Year</option>
+                                <option value="4th_year" {% if active_template.year_level_target == '4th_year' %}selected{% endif %}>4th Year</option>
+                            </select>
+                        </div>
+                        <small class="form-text">Specify which year levels this template applies to.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="landlordCountersign" name="landlord_countersign">
+                            <label class="form-check-label" for="landlordCountersign">
+                                Require Landlord/Landlady Countersign
+                            </label>
+                            <small class="form-text text-muted d-block">If checked, a Landlord/Landlady signature field will be automatically added</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fieldTemplate" class="form-label">Load Preset</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-list-alt"></i></span>
+                            <select class="form-select" id="fieldTemplate">
+                                <option value="">Custom Fields</option>
+                                <option value="default">Default Template</option>
+                                <option value="midterm">Midterm Template</option>
+                                <option value="final">Final Template</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-light mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Clearance Fields</h6>
+                        </div>
+                        <div class="card-body" id="fieldsContainer">
+                            {% if active_template.fields %}
+                                {% for field in active_template.fields %}
+                                    <div class="field-item mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-check-square"></i></span>
+                                            <input type="text" class="form-control" name="field_name[]" value="{{ field.name }}" placeholder="Field Name (e.g., Library)" required>
+                                            <button type="button" class="btn btn-outline-danger remove-field">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="field-item mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-check-square"></i></span>
+                                        <input type="text" class="form-control" name="field_name[]" placeholder="Field Name (e.g., Library)" required>
+                                        <button type="button" class="btn btn-outline-danger remove-field">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <button type="button" class="btn btn-outline-primary w-100" id="addFieldBtn">
+                                <i class="fas fa-plus me-2"></i> Add Field
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mt-3">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-user-check me-2 text-primary"></i>
+                    <h5 class="mb-0">Staff Assignment</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="staffAssignmentContainer">
+                    <p class="text-muted text-center py-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Add clearance fields first to assign staff.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mt-3">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-save me-2 text-primary"></i>
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <button type="button" class="btn btn-success w-100 mb-2" id="saveTemplateBtn" data-bs-toggle="modal" data-bs-target="#saveTemplateModal">
+                    <i class="fas fa-save me-2"></i> Save Template
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-clipboard-list me-2 text-primary"></i>
+                    <h5 class="mb-0">Saved Templates</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if templates %}
+                    <div class="mb-3">
+                        <label for="filterDepartment" class="form-label">Filter by Department</label>
+                        <select class="form-select" id="filterDepartment">
+                            <option value="">All Departments</option>
+                            {% for department in departments %}
+                            <option value="{{ department.id }}">{{ department.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Year Level</th>
+                                    <th>Status</th>
+                                    <th>Fields</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for template in templates %}
+                                    <tr>
+                                        <td><strong>{{ template.name }}</strong></td>
+                                        <td data-department-id="{{ template.department.id|default:'' }}">
+                                            {% if template.department %}
+                                                <a href="{% url 'dashboard:admin_templates' %}?department={{ template.department.id }}">{{ template.department.name }}</a>
+                                            {% else %}
+                                                All Departments
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ template.get_year_level_target_display }}</td>
+                                        <td>
+                                            {% if template.is_active %}
+                                                <span class="badge bg-success"><i class="fas fa-check me-1"></i>Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary"><i class="fas fa-times me-1"></i>Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary rounded-pill">{{ template.fields|length }} fields</span>
+                                        </td>
+                                        <td>{{ template.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-primary view-template" data-id="{{ template.id }}" data-bs-toggle="modal" data-bs-target="#viewTemplateModal" title="View" data-bs-toggle="tooltip">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-info load-template" data-id="{{ template.id }}" title="Load" data-bs-toggle="tooltip">
+                                                    <i class="fas fa-upload"></i>
+                                                </button>
+                                                {% if not template.is_active %}
+                                                <button type="button" class="btn btn-success activate-template" data-id="{{ template.id }}" title="Activate" data-bs-toggle="tooltip">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                {% endif %}
+                                                <button type="button" class="btn btn-danger delete-template" data-id="{{ template.id }}" data-name="{{ template.name }}" data-bs-toggle="modal" data-bs-target="#deleteTemplateModal" title="Delete" data-bs-toggle="tooltip">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-clipboard-list text-muted" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="text-muted">No saved templates found</h5>
+                        <p class="text-muted mb-3">Create a new template to get started</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    <h5 class="mb-0">Template Usage</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle me-2"></i> How to use templates</h5>
+                    <ol>
+                        <li>Create a template with the required clearance fields</li>
+                        <li>Assign staff members to each field</li>
+                        <li>Save the template for future use</li>
+                        <li>Load a template when creating clearance forms</li>
+                        <li>Assign the template to students by course, section, or individually</li>
+                    </ol>
+                    <p class="mb-0">Templates make it easy to standardize clearance requirements across different courses or semesters.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Save Template Modal -->
+<div class="modal fade" id="saveTemplateModal" tabindex="-1" aria-labelledby="saveTemplateModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="saveTemplateModalLabel">Save Clearance Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:admin_templates' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="save_template">
+                <div class="modal-body">
+                    <p>Are you sure you want to save this clearance template?</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> This will save the current fields and staff assignments as a new template.
+                    </div>
+                    <div id="templateFieldsData"></div>
+                    <input type="hidden" id="modal_department_id" name="department_id" value="">
+                    <input type="hidden" id="modal_year_level_target" name="year_level_target" value="all">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Template Modal -->
+<div class="modal fade" id="viewTemplateModal" tabindex="-1" aria-labelledby="viewTemplateModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewTemplateModalLabel">Template Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="templateDetails">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Loading template details...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="loadTemplateFromView">Load Template</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Template Modal -->
+<div class="modal fade" id="deleteTemplateModal" tabindex="-1" aria-labelledby="deleteTemplateModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteTemplateModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:admin_templates' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_template">
+                <input type="hidden" name="template_id" id="delete_template_id">
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the template <strong id="delete_template_name"></strong>?</p>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i> This action cannot be undone.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Load Template Form -->
+<form id="loadTemplateForm" action="{% url 'dashboard:admin_templates' %}" method="post" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="load_template">
+    <input type="hidden" name="template_id" id="load_template_id">
+</form>
+
+<!-- Activate Template Modal -->
+<div class="modal fade" id="activateTemplateModal" tabindex="-1" aria-labelledby="activateTemplateModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="activateTemplateModalLabel">Activate Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:admin_templates' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="activate_template">
+                <input type="hidden" name="template_id" id="activateTemplateId">
+                <div class="modal-body">
+                    <p>Are you sure you want to activate this template?</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> This will:
+                        <ul>
+                            <li>Set this template as the active template for new students</li>
+                            <li>Deactivate any other active templates</li>
+                            <li>Apply this template to all students who don't have clearance forms yet</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Activate Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Create Template Modal -->
+<div class="modal fade" id="createTemplateModal" tabindex="-1" aria-labelledby="createTemplateModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="createTemplateModalLabel"><i class="fas fa-plus me-2"></i>Create New Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> You can create a new template by filling out the form on the left side of the page.
+                </div>
+                <p>To create a new template:</p>
+                <ol>
+                    <li>Enter a template name</li>
+                    <li>Add clearance fields (e.g., Library, Accounting)</li>
+                    <li>Assign staff members to each field</li>
+                    <li>Click "Save Template" to store it</li>
+                </ol>
+                <p>You can also load preset templates or use an existing template as a starting point.</p>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add field button
+        const addFieldBtn = document.getElementById('addFieldBtn');
+        const fieldsContainer = document.getElementById('fieldsContainer');
+        
+        addFieldBtn.addEventListener('click', function() {
+            addField();
+        });
+        
+        // Function to add a new field
+        function addField(name = '', staffId = '') {
+            const fieldItem = document.createElement('div');
+            fieldItem.className = 'field-item mb-3';
+            fieldItem.innerHTML = `
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-check-square"></i></span>
+                    <input type="text" class="form-control" name="field_name[]" value="${name}" placeholder="Field Name (e.g., Library)" required>
+                    <button type="button" class="btn btn-outline-danger remove-field">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            fieldsContainer.appendChild(fieldItem);
+            
+            // Update staff assignment container
+            updateStaffAssignment();
+        }
+        
+        // Landlord countersign checkbox
+        const landlordCountersign = document.getElementById('landlordCountersign');
+        if (landlordCountersign) {
+            landlordCountersign.addEventListener('change', function() {
+                // Find any existing landlord field
+                const landlordField = Array.from(document.querySelectorAll('input[name="field_name[]"]'))
+                    .find(input => input.value.toLowerCase().includes('landlord') || 
+                                  input.value.toLowerCase().includes('landlady'));
+                
+                if (this.checked) {
+                    // Add landlord field if it doesn't exist
+                    if (!landlordField) {
+                        addField('Landlord/Landlady Countersign');
+                        
+                        // Find the newly added field and mark it as special
+                        const newFields = document.querySelectorAll('input[name="field_name[]"]');
+                        const newLandlordField = Array.from(newFields)
+                            .find(input => input.value === 'Landlord/Landlady Countersign');
+                        
+                        if (newLandlordField) {
+                            const fieldItem = newLandlordField.closest('.field-item');
+                            fieldItem.classList.add('landlord-field');
+                            newLandlordField.setAttribute('readonly', 'true');
+                            
+                            // Add a small badge to indicate it's a special field
+                            const inputGroup = newLandlordField.closest('.input-group');
+                            const badge = document.createElement('span');
+                            badge.className = 'input-group-text bg-warning text-dark';
+                            badge.innerHTML = '<i class="fas fa-home"></i>';
+                            inputGroup.insertBefore(badge, newLandlordField);
+                        }
+                    }
+                } else {
+                    // Remove landlord field if it exists
+                    if (landlordField) {
+                        const fieldItem = landlordField.closest('.field-item');
+                        fieldItem.remove();
+                        updateStaffAssignment();
+                    }
+                }
+            });
+        }
+        
+        // Remove field button event delegation
+        fieldsContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-field') || e.target.closest('.remove-field')) {
+                const fieldItem = e.target.closest('.field-item');
+                
+                // Don't allow removing landlord field if checkbox is checked
+                if (fieldItem.classList.contains('landlord-field') && landlordCountersign.checked) {
+                    alert('You cannot remove the Landlord/Landlady field while the option is checked.');
+                    return;
+                }
+                
+                fieldItem.remove();
+                
+                // Update staff assignment container
+                updateStaffAssignment();
+            }
+        });
+        
+        // Load preset templates
+        const fieldTemplate = document.getElementById('fieldTemplate');
+        
+        fieldTemplate.addEventListener('change', function() {
+            const selectedValue = this.value;
+            
+            if (selectedValue) {
+                loadPresetFields(selectedValue);
+            }
+        });
+        
+        // Function to load preset fields
+        function loadPresetFields(preset) {
+            // Clear existing fields
+            fieldsContainer.innerHTML = '';
+            
+            let fields = [];
+            
+            // Define preset fields
+            switch (preset) {
+                case 'default':
+                    fields = [
+                        { name: "Library", staff: "" },
+                        { name: "Accounting", staff: "" },
+                        { name: "Registrar", staff: "" },
+                        { name: "Department", staff: "" }
+                    ];
+                    break;
+                case 'midterm':
+                    fields = [
+                        { name: "Library", staff: "" },
+                        { name: "Laboratory", staff: "" },
+                        { name: "Department", staff: "" }
+                    ];
+                    break;
+                case 'final':
+                    fields = [
+                        { name: "Library", staff: "" },
+                        { name: "Accounting", staff: "" },
+                        { name: "Laboratory", staff: "" },
+                        { name: "Registrar", staff: "" },
+                        { name: "Department", staff: "" },
+                        { name: "Dean's Office", staff: "" }
+                    ];
+                    break;
+            }
+            
+            // Add fields
+            fields.forEach(field => {
+                addField(field.name, field.staff);
+            });
+            
+            // Add landlord field if checkbox is checked
+            if (landlordCountersign && landlordCountersign.checked) {
+                addField('Landlord/Landlady Countersign');
+                
+                // Find the newly added field and mark it as special
+                const newFields = document.querySelectorAll('input[name="field_name[]"]');
+                const newLandlordField = Array.from(newFields)
+                    .find(input => input.value === 'Landlord/Landlady Countersign');
+                
+                if (newLandlordField) {
+                    const fieldItem = newLandlordField.closest('.field-item');
+                    fieldItem.classList.add('landlord-field');
+                    newLandlordField.setAttribute('readonly', 'true');
+                    
+                    // Add a small badge to indicate it's a special field
+                    const inputGroup = newLandlordField.closest('.input-group');
+                    const badge = document.createElement('span');
+                    badge.className = 'input-group-text bg-warning text-dark';
+                    badge.innerHTML = '<i class="fas fa-home"></i>';
+                    inputGroup.insertBefore(badge, newLandlordField);
+                }
+            }
+        }
+        
+        // Update staff assignment container
+        function updateStaffAssignment() {
+            const staffAssignmentContainer = document.getElementById('staffAssignmentContainer');
+            const fieldInputs = document.querySelectorAll('input[name="field_name[]"]');
+            
+            if (fieldInputs.length === 0) {
+                staffAssignmentContainer.innerHTML = '<p class="text-muted">Add clearance fields first to assign staff.</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            fieldInputs.forEach((input, index) => {
+                const fieldName = input.value.trim() || `Field ${index + 1}`;
+                const isLandlordField = input.closest('.field-item').classList.contains('landlord-field') || 
+                                       fieldName.toLowerCase().includes('landlord') || 
+                                       fieldName.toLowerCase().includes('landlady');
+                
+                html += `
+                    <div class="mb-3">
+                        <label class="form-label">${fieldName}</label>
+                `;
+                
+                // For landlord field, show a special message instead of staff selection
+                if (isLandlordField) {
+                    html += `
+                        <div class="alert alert-warning py-2">
+                            <small><i class="fas fa-info-circle me-1"></i> This field will be automatically assigned to a landlord/landlady user</small>
+                        </div>
+                        <input type="hidden" name="staff_assign[]" value="">
+                    `;
+                } else {
+                    html += `
+                        <select class="form-select" name="staff_assign[]">
+                            <option value="">Select Staff</option>
+                            {% for staff in staff_users %}
+                            <option value="{{ staff.id }}">{{ staff.get_full_name|default:staff.username }}</option>
+                            {% endfor %}
+                        </select>
+                `;
+                }
+                
+                html += `</div>`;
+            });
+            
+            staffAssignmentContainer.innerHTML = html;
+        }
+        
+        // Save template button
+        document.getElementById('saveTemplateBtn').addEventListener('click', function() {
+            const templateFieldsData = document.getElementById('templateFieldsData');
+            const fieldInputs = document.querySelectorAll('input[name="field_name[]"]');
+            const staffSelects = document.querySelectorAll('.staff-select');
+            const templateName = document.getElementById('templateName').value;
+            const departmentId = document.getElementById('departmentSelect').value;
+            const yearLevelTarget = document.getElementById('yearLevelTarget').value;
+            
+            // Validate that there's at least one field
+            if (fieldInputs.length === 0) {
+                alert('Please add at least one clearance field before saving the template.');
+                return;
+            }
+            
+            if (!templateName.trim()) {
+                alert('Please enter a template name.');
+                return;
+            }
+            
+            let html = `
+                <input type="hidden" name="template_name" value="${templateName}">
+            `;
+            
+            // Add department and year level target to modal form
+            document.getElementById('modal_department_id').value = departmentId;
+            document.getElementById('modal_year_level_target').value = yearLevelTarget;
+            
+            // Add fields and staff assignments
+            for (let i = 0; i < fieldInputs.length; i++) {
+                const fieldName = fieldInputs[i].value;
+                const staffId = staffSelects[i] ? staffSelects[i].value : '';
+                
+                html += `
+                    <input type="hidden" name="field_name[]" value="${fieldName}">
+                        <input type="hidden" name="staff_assign[]" value="${staffId}">
+                    `;
+                }
+            
+            templateFieldsData.innerHTML = html;
+            
+            // Show the modal
+            const saveTemplateModal = new bootstrap.Modal(document.getElementById('saveTemplateModal'));
+            saveTemplateModal.show();
+        });
+        
+        // View template
+        const viewButtons = document.querySelectorAll('.view-template');
+        
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const templateId = this.getAttribute('data-id');
+                const templateDetails = document.getElementById('templateDetails');
+                
+                // Create template data from server-rendered data
+                let templatesData = [];
+                {% for template in templates %}
+                templatesData.push({
+                    id: "{{ template.id }}",
+                    name: "{{ template.name }}",
+                    created_at: "{{ template.created_at }}",
+                    fields: [
+                        {% for field in template.fields %}
+                        {
+                            name: "{{ field.name }}",
+                            staff_id: "{{ field.staff_id }}"
+                        }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]
+                });
+                {% endfor %}
+                
+                let selectedTemplate = templatesData.find(t => t.id === templateId);
+                
+                if (selectedTemplate) {
+                    let html = `
+                        <h4>${selectedTemplate.name}</h4>
+                        <p class="text-muted">Created on: ${selectedTemplate.created_at}</p>
+                        
+                        <h5 class="mt-4">Fields</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Field Name</th>
+                                        <th>Assigned Staff</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    selectedTemplate.fields.forEach((field, index) => {
+                        html += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${field.name}</td>
+                                <td>${getStaffName(field.staff_id)}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    
+                    templateDetails.innerHTML = html;
+                    
+                    // Set the template ID for loading
+                    document.getElementById('loadTemplateFromView').setAttribute('data-id', templateId);
+                } else {
+                    templateDetails.innerHTML = '<div class="alert alert-danger">Template not found.</div>';
+                }
+            });
+        });
+        
+        // Helper function to get staff name
+        function getStaffName(staffId) {
+            if (!staffId) return 'Not assigned';
+            
+            const staffMap = {};
+            
+            // Create a map of staff IDs to names
+            {% for staff in staff_users %}
+            staffMap["{{ staff.id }}"] = "{{ staff.get_full_name|default:staff.username }}";
+            {% endfor %}
+            
+            return staffMap[staffId] || 'Unknown';
+        }
+        
+        // Load template
+        const loadButtons = document.querySelectorAll('.load-template');
+        
+        loadButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const templateId = this.getAttribute('data-id');
+                document.getElementById('load_template_id').value = templateId;
+                document.getElementById('loadTemplateForm').submit();
+            });
+        });
+        
+        // Load template from view modal
+        document.getElementById('loadTemplateFromView').addEventListener('click', function() {
+            const templateId = this.getAttribute('data-id');
+            document.getElementById('load_template_id').value = templateId;
+            document.getElementById('loadTemplateForm').submit();
+        });
+        
+        // Delete template
+        const deleteButtons = document.querySelectorAll('.delete-template');
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const templateId = this.getAttribute('data-id');
+                const templateName = this.getAttribute('data-name');
+                
+                document.getElementById('delete_template_id').value = templateId;
+                document.getElementById('delete_template_name').textContent = templateName;
+            });
+        });
+        
+        // Activate template
+        const activateButtons = document.querySelectorAll('.activate-template');
+        
+        activateButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const templateId = this.getAttribute('data-id');
+                document.getElementById('activateTemplateId').value = templateId;
+                
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('activateTemplateModal'));
+                modal.show();
+            });
+        });
+        
+        // Filter templates by department
+        const filterDepartment = document.getElementById('filterDepartment');
+        if (filterDepartment) {
+            filterDepartment.addEventListener('change', function() {
+                const departmentId = this.value;
+                const templateRows = document.querySelectorAll('.table tbody tr');
+                
+                templateRows.forEach(row => {
+                    const departmentCell = row.querySelector('td:nth-child(2)');
+                    if (!departmentCell) return;
+                    
+                    const cellDepartmentId = departmentCell.getAttribute('data-department-id');
+                    
+                    if (!departmentId || (departmentId && cellDepartmentId === departmentId)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    
+    });
+
+</script>
+{% endblock %} 

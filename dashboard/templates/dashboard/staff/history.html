@@ -1,0 +1,514 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Report History - ClearTrack{% endblock %}
+
+{% block page_title %}Report History{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-filter me-2 text-primary"></i>
+                    <h5 class="mb-0">Filter Reports</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="reportFilterForm">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="monthFilter" class="form-label">Month</label>
+                            <select class="form-select" id="monthFilter">
+                                <option value="">All Months</option>
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="yearFilter" class="form-label">Year</label>
+                            <select class="form-select" id="yearFilter">
+                                <option value="">All Years</option>
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="studentsFilter" class="form-label">Students</label>
+                            <select class="form-select" id="studentsFilter">
+                                <option value="">All Reports</option>
+                                <option value="1">1+ Students</option>
+                                <option value="5">5+ Students</option>
+                                <option value="10">10+ Students</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-primary" id="applyFilterBtn">
+                                <i class="fas fa-filter me-2"></i> Apply Filters
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="resetFilterBtn">
+                                <i class="fas fa-undo me-2"></i> Reset Filters
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-history me-2 text-primary"></i>
+                            <h5 class="mb-0">Submitted Reports</h5>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <span class="badge bg-primary rounded-pill" id="reportCount">{{ reports|length }} Reports</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if reports %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="reportsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Students Signed</th>
+                                    <th>Fields Signed</th>
+                                    <th>Submission Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                <tr data-month="{{ report.date|date:'n' }}" data-year="{{ report.date|date:'Y' }}" data-students="{{ report.entries|length }}">
+                                    <td><strong>{{ report.date|date:"F d, Y" }}</strong></td>
+                                    <td><span class="badge bg-info rounded-pill">{{ report.entries|length }}</span></td>
+                                    <td>
+                                        {% with total_fields=report.total_fields %}
+                                        {% if total_fields > 0 %}
+                                            <span class="badge bg-success rounded-pill">{{ total_fields }} fields</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No fields</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td><small class="text-muted">{{ report.updated_at|date:"H:i" }}</small></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-primary view-report" data-bs-toggle="modal" data-bs-target="#viewReportModal" data-id="{{ report.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-info print-report" data-id="{{ report.id }}" data-date="{{ report.date|date:'F d, Y' }}">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-history text-muted" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="text-muted">No reports found</h5>
+                        <p class="text-muted mb-3">After you submit a daily report, it will appear here</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Report Modal -->
+<div class="modal fade" id="viewReportModal" tabindex="-1" aria-labelledby="viewReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="viewReportModalLabel">
+                    <i class="fas fa-file-alt me-2"></i>Report Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-calendar me-2"></i>Date:</strong> <span id="report_date"></span></p>
+                                    <p><strong><i class="fas fa-user-graduate me-2"></i>Students Signed:</strong> <span id="report_students"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-check-square me-2"></i>Fields Signed:</strong> <span id="report_fields"></span></p>
+                                    <p><strong><i class="fas fa-clock me-2"></i>Submitted At:</strong> <span id="report_time"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6 class="mb-3"><i class="fas fa-users me-2"></i>Students Signed</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover" id="reportEntriesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Fields Signed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportEntriesList">
+                            <tr>
+                                <td colspan="3" class="text-center">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-primary" id="printModalReport">
+                    <i class="fas fa-print me-2"></i>Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality
+        const monthFilter = document.getElementById('monthFilter');
+        const yearFilter = document.getElementById('yearFilter');
+        const studentsFilter = document.getElementById('studentsFilter');
+        const applyFilterBtn = document.getElementById('applyFilterBtn');
+        const resetFilterBtn = document.getElementById('resetFilterBtn');
+        const reportsTable = document.getElementById('reportsTable');
+        const reportCount = document.getElementById('reportCount');
+        
+        // Apply filters
+        applyFilterBtn.addEventListener('click', function() {
+            filterTable();
+        });
+        
+        // Reset filters
+        resetFilterBtn.addEventListener('click', function() {
+            monthFilter.value = '';
+            yearFilter.value = '';
+            studentsFilter.value = '';
+            filterTable();
+        });
+        
+        function filterTable() {
+            const selectedMonth = monthFilter.value;
+            const selectedYear = yearFilter.value;
+            const selectedStudents = studentsFilter.value;
+            
+            if (!reportsTable) return;
+            
+            const rows = reportsTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            let visibleCount = 0;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const month = rows[i].getAttribute('data-month');
+                const year = rows[i].getAttribute('data-year');
+                const students = parseInt(rows[i].getAttribute('data-students'));
+                
+                let matchesMonth = true;
+                let matchesYear = true;
+                let matchesStudents = true;
+                
+                if (selectedMonth && month !== selectedMonth) {
+                    matchesMonth = false;
+                }
+                
+                if (selectedYear && year !== selectedYear) {
+                    matchesYear = false;
+                }
+                
+                if (selectedStudents && students < parseInt(selectedStudents)) {
+                    matchesStudents = false;
+                }
+                
+                const isVisible = matchesMonth && matchesYear && matchesStudents;
+                rows[i].style.display = isVisible ? '' : 'none';
+                
+                if (isVisible) {
+                    visibleCount++;
+                }
+            }
+            
+            // Update report count
+            if (reportCount) {
+                reportCount.textContent = visibleCount + ' Reports';
+            }
+        }
+        
+        // View report modal
+        const viewReportButtons = document.querySelectorAll('.view-report');
+        
+        viewReportButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const reportId = this.getAttribute('data-id');
+                const row = this.closest('tr');
+                
+                // Show loading state
+                document.getElementById('report_date').textContent = row.cells[0].textContent;
+                document.getElementById('report_students').textContent = row.cells[1].textContent;
+                document.getElementById('report_fields').textContent = row.cells[2].textContent;
+                document.getElementById('report_time').textContent = row.cells[3].textContent;
+                document.getElementById('reportEntriesList').innerHTML = '<tr><td colspan="3" class="text-center">Loading...</td></tr>';
+                
+                // Fetch report details via AJAX
+                fetch(`{% url 'dashboard:get_report_details' %}?id=${reportId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const report = data.report;
+                            
+                            // Update report details
+                            document.getElementById('report_date').textContent = report.date;
+                            document.getElementById('report_students').textContent = report.entries.length;
+                            document.getElementById('report_fields').textContent = countTotalFields(report.entries) + ' fields';
+                            document.getElementById('report_time').textContent = report.submitted_at;
+                            
+                            // Generate entries HTML
+                            let entriesHtml = '';
+                            if (report.entries.length > 0) {
+                                report.entries.forEach(entry => {
+                                    entriesHtml += `
+                                        <tr>
+                                            <td>${entry.id}</td>
+                                            <td>${entry.name}</td>
+                                            <td>${entry.fields.join(', ')}</td>
+                                        </tr>
+                                    `;
+                                });
+                            } else {
+                                entriesHtml = '<tr><td colspan="3" class="text-center">No entries found in this report.</td></tr>';
+                            }
+                            
+                            document.getElementById('reportEntriesList').innerHTML = entriesHtml;
+                        } else {
+                            document.getElementById('reportEntriesList').innerHTML = 
+                                `<tr><td colspan="3" class="text-center text-danger">Error: ${data.error || 'Failed to load report details'}</td></tr>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching report details:', error);
+                        document.getElementById('reportEntriesList').innerHTML = 
+                            '<tr><td colspan="3" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+                    });
+            });
+        });
+        
+        // Helper function to count total fields
+        function countTotalFields(entries) {
+            let count = 0;
+            entries.forEach(entry => {
+                count += entry.fields.length;
+            });
+            return count;
+        }
+        
+        // Print report
+        const printReportButtons = document.querySelectorAll('.print-report');
+        
+        printReportButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const reportId = this.getAttribute('data-id');
+                const reportDate = this.getAttribute('data-date');
+                printReport(reportId, reportDate);
+            });
+        });
+        
+        // Print modal report
+        const printModalReportButton = document.getElementById('printModalReport');
+        
+        if (printModalReportButton) {
+            printModalReportButton.addEventListener('click', function() {
+                const date = document.getElementById('report_date').textContent;
+                const students = document.getElementById('report_students').textContent;
+                const fields = document.getElementById('report_fields').textContent;
+                
+                // Clone the table but remove the loading message if it exists
+                const reportEntriesTable = document.getElementById('reportEntriesTable').cloneNode(true);
+                const loadingRow = reportEntriesTable.querySelector('tbody tr td.text-center:only-child');
+                if (loadingRow && loadingRow.textContent.includes('Loading')) {
+                    loadingRow.textContent = 'No entries available for printing';
+                }
+                
+                printReportContent(date, students, fields, reportEntriesTable);
+            });
+        }
+        
+        function printReport(reportId, date) {
+            // Show loading indicator or message
+            const loadingMsg = "Loading report data...";
+            document.getElementById('reportCount').innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${loadingMsg}`;
+            
+            // Fetch report details via AJAX
+            fetch(`{% url 'dashboard:get_report_details' %}?id=${reportId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('reportCount').textContent = `${document.querySelectorAll('#reportsTable tbody tr:not([style*="display: none"])'). length} Reports`;
+                    
+                    if (data.success) {
+                        const report = data.report;
+                        const students = report.entries.length;
+                        const fields = countTotalFields(report.entries);
+                        
+                        // Create report table
+                        const table = document.createElement('table');
+                        table.className = 'table table-bordered';
+                        
+                        let tableHtml = `
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Fields Signed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        `;
+                        
+                        if (report.entries.length > 0) {
+                            report.entries.forEach(entry => {
+                                tableHtml += `
+                                    <tr>
+                                        <td>${entry.id}</td>
+                                        <td>${entry.name}</td>
+                                        <td>${entry.fields.join(', ')}</td>
+                                    </tr>
+                                `;
+                            });
+                        } else {
+                            tableHtml += `
+                                <tr>
+                                    <td colspan="3" class="text-center">No entries found in this report.</td>
+                                </tr>
+                            `;
+                        }
+                        
+                        tableHtml += '</tbody>';
+                        table.innerHTML = tableHtml;
+                        
+                        // Print the report with real data
+                        printReportContent(date, students, fields + ' fields', table);
+                    } else {
+                        alert(`Error loading report: ${data.error || 'Unknown error'}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching report details:', error);
+                    document.getElementById('reportCount').textContent = `${document.querySelectorAll('#reportsTable tbody tr:not([style*="display: none"])'). length} Reports`;
+                    alert('Error loading report data. Please try again.');
+                });
+        }
+        
+        function printReportContent(date, students, fields, tableElement) {
+            const staffName = '{{ user.get_full_name|default:user.username }}';
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Report History - ${date}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { text-align: center; margin-bottom: 5px; }
+                        .subtitle { text-align: center; margin-bottom: 20px; color: #666; }
+                        .report-info { margin-bottom: 20px; }
+                        .report-info table { width: 100%; border-collapse: collapse; }
+                        .report-info td { padding: 8px; }
+                        .report-info td:first-child { font-weight: bold; width: 150px; }
+                        table.data { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        table.data th, table.data td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        table.data th { background-color: #f2f2f2; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Clearance Report</h1>
+                    <div class="subtitle">ClearTrack Student Clearance System</div>
+                    
+                    <div class="report-info">
+                        <table>
+                            <tr>
+                                <td>Staff:</td>
+                                <td>${staffName}</td>
+                            </tr>
+                            <tr>
+                                <td>Date:</td>
+                                <td>${date}</td>
+                            </tr>
+                            <tr>
+                                <td>Students Signed:</td>
+                                <td>${students}</td>
+                            </tr>
+                            <tr>
+                                <td>Fields Signed:</td>
+                                <td>${fields}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    ${tableElement ? tableElement.outerHTML.replace('id="reportEntriesTable"', 'class="data"') : '<p>No entries in this report.</p>'}
+                    
+                    <div class="footer">
+                        <p>Generated on ${new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}</p>
+                    </div>
+                    
+                    '<' + 'script>' +
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(function() { window.close(); }, 500);
+                        }
+                    '</' + 'script>' +
+                </body>
+                </html>`
+            );
+            printWindow.document.close();
+        }
+        
+        // Set current month and year in filters
+        const currentDate = new Date();
+        monthFilter.value = (currentDate.getMonth() + 1).toString(); // Months are 0-indexed in JS
+        yearFilter.value = currentDate.getFullYear().toString();
+        
+        // Apply initial filtering
+        filterTable();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">Choose Your Payment Method</h2>
+        <p class="text-muted">Complete your subscription securely using one of the methods below.</p>
+    </div>
+
+    <!-- Plan Summary -->
+    <div class="text-center mb-4">
+        <h4 class="fw-bold">{{ plan|capfirst }} Plan</h4>
+        <p class="mb-1"><strong>Billing Cycle:</strong> {{ billing_cycle|capfirst }}</p>
+        <p><strong>Amount:</strong> ${{ price }} USD</p>
+    </div>
+
+    <div class="row justify-content-center g-4">
+        <!-- PayPal -->
+        <div class="col-md-4">
+            <form method="POST" action="{% url 'dashboard:process_payment' %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan" value="{{ plan }}">
+                <input type="hidden" name="billing_cycle" value="{{ billing_cycle }}">
+                <div class="card shadow-lg border-0 hover-shadow transition rounded-4">
+                    <div class="card-body text-center p-4">
+                        <img src="{% static 'img/paypal-logo.png' %}" alt="Pay with PayPal" width="120" class="mb-3 fade-in">
+                        <h5 class="card-title fw-bold">Pay with PayPal</h5>
+                        <p class="text-muted small">Fast and secure international payment option.</p>
+                        <button type="submit" class="btn btn-outline-primary w-100 mt-3">Continue with PayPal</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- M-Pesa -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 hover-shadow transition rounded-4">
+                <div class="card-body text-center p-4">
+                    <img src="{% static 'img/mpesa-logo.png' %}" alt="M-Pesa" width="100" class="mb-3 grayscale">
+                    <h5 class="card-title fw-bold">Pay with M-Pesa</h5>
+                    <p class="text-muted small">Mobile money for Kenyan users. (Coming soon)</p>
+                    <button type="button" class="btn btn-outline-secondary w-100 mt-3" disabled>Coming Soon</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stripe / Cards -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 hover-shadow transition rounded-4">
+                <div class="card-body text-center p-4">
+                    <img src="{% static 'img/stripe-logo.png' %}" alt="Stripe / Card Payment" width="100" class="mb-3 grayscale">
+                    <h5 class="card-title fw-bold">Stripe / Card Payment</h5>
+                    <p class="text-muted small">Visa, Mastercard, Amex supported. (Coming soon)</p>
+                    <button type="button" class="btn btn-outline-secondary w-100 mt-3" disabled>Coming Soon</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.2) !important;
+        transform: translateY(-4px);
+        transition: all 0.3s ease;
+    }
+    .fade-in {
+        animation: fadeIn 1s ease-in-out;
+    }
+    .grayscale {
+        filter: grayscale(100%);
+        opacity: 0.6;
+    }
+    .grayscale:hover {
+        filter: grayscale(0%);
+        opacity: 1;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

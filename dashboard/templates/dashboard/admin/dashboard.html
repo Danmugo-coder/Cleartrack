@@ -1,0 +1,1084 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Admin Dashboard - ClearTrack{% endblock %}
+
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<!-- Chart.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+<!-- ApexCharts CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.36.0/dist/apexcharts.min.css">
+
+<style>
+    .stats-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+    
+    .stats-card .card-body {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stats-card-icon {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 4rem;
+        opacity: 0.15;
+        transition: all 0.3s;
+    }
+    
+    .stats-card:hover .stats-card-icon {
+        opacity: 0.25;
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .stats-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 5px;
+    }
+    
+    .stats-info {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .stats-card-footer {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .stats-card-footer i {
+        margin-left: 5px;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    
+    .activity-item {
+        padding: 15px;
+        border-left: 3px solid transparent;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        background-color: rgba(0, 0, 0, 0.02);
+        transition: all 0.3s;
+    }
+    
+    .activity-item:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+        transform: translateX(5px);
+    }
+    
+    .activity-item.border-primary {
+        border-left-color: var(--primary-color);
+    }
+    
+    .activity-item.border-success {
+        border-left-color: var(--success-color);
+    }
+    
+    .activity-item.border-warning {
+        border-left-color: var(--warning-color);
+    }
+    
+    .activity-item.border-info {
+        border-left-color: var(--info-color);
+    }
+    
+    .activity-item h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .activity-item p {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+        color: #6c757d;
+    }
+    
+    .activity-meta {
+        font-size: 0.8rem;
+        color: #adb5bd;
+    }
+    
+    .quick-action-card {
+        background-color: white;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .quick-action-card .icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 10px;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+    
+    .quick-action-card .content {
+        flex: 1;
+    }
+    
+    .quick-action-card .title {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 5px;
+    }
+    
+    .quick-action-card .description {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .quick-action-card .action {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary-color);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        margin-left: 10px;
+        transition: all 0.3s;
+    }
+    
+    .quick-action-card:hover .action {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .system-info-card {
+        background-color: white;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .system-info-item {
+        padding: 15px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .system-info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .system-info-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    
+    .system-info-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .system-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+    
+    .system-status.active {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .system-status i {
+        margin-right: 5px;
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="stats-card-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h5 class="stats-label">Total Students</h5>
+                <h2 class="stats-number">{{ students_count }}</h2>
+                <p class="stats-info">Registered in the system</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 stats-card-footer">
+                <a href="{% url 'dashboard:admin_students' %}" class="text-white text-decoration-none">
+                    View Details <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="stats-card-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h5 class="stats-label">Completed Clearances</h5>
+                <h2 class="stats-number">{{ complete_clearance }}</h2>
+                <p class="stats-info">Successfully processed</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 stats-card-footer">
+                <a href="{% url 'dashboard:admin_clearance' %}" class="text-white text-decoration-none">
+                    View Details <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="stats-card-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h5 class="stats-label">Pending Clearances</h5>
+                <h2 class="stats-number">{{ incomplete_clearance }}</h2>
+                <p class="stats-info">Awaiting completion</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 stats-card-footer">
+                <a href="{% url 'dashboard:admin_clearance' %}" class="text-white text-decoration-none">
+                    View Details <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="stats-card-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <h5 class="stats-label">Completion Rate</h5>
+                <h2 class="stats-number">{{ clearance_rate }}%</h2>
+                <p class="stats-info">Overall progress</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 stats-card-footer">
+                <a href="{% url 'dashboard:admin_reports' %}" class="text-white text-decoration-none">
+                    View Reports <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Section -->
+<div class="row mb-4">
+    <div class="col-xl-8 col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Clearance Progress Overview</h5>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="chartTimeRange" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if time_range == '30d' %}
+                            Last 30 Days
+                        {% elif time_range == '90d' %}
+                            Last 90 Days
+                        {% elif time_range == '1y' %}
+                            Last Year
+                        {% else %}
+                            Last 7 Days
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="chartTimeRange">
+                        <li><a class="dropdown-item" href="?time_range=7d&dept_range={{ dept_range }}">Last 7 Days</a></li>
+                        <li><a class="dropdown-item" href="?time_range=30d&dept_range={{ dept_range }}">Last 30 Days</a></li>
+                        <li><a class="dropdown-item" href="?time_range=90d&dept_range={{ dept_range }}">Last 90 Days</a></li>
+                        <li><a class="dropdown-item" href="?time_range=1y&dept_range={{ dept_range }}">Last Year</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="clearanceProgressChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Clearance Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="clearanceDistributionChart"></canvas>
+                </div>
+                <div class="row text-center mt-3">
+                    <div class="col-4">
+                        <h6 class="mb-0 fw-bold">{{ complete_clearance }}</h6>
+                        <p class="text-muted mb-0 small">Complete</p>
+                    </div>
+                    <div class="col-4">
+                        <h6 class="mb-0 fw-bold">{{ incomplete_clearance }}</h6>
+                        <p class="text-muted mb-0 small">Pending</p>
+                    </div>
+                    <div class="col-4">
+                        <h6 class="mb-0 fw-bold">{{ clearance_rate }}%</h6>
+                        <p class="text-muted mb-0 small">Rate</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity and Quick Actions -->
+<div class="row">
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Activities</h5>
+                        <a href="#" class="btn btn-sm btn-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_clearances %}
+                            {% for field in recent_clearances|slice:":4" %}
+                                <div class="activity-item border-{% cycle 'primary' 'success' 'warning' 'info' %}">
+                                    <h5>{{ field.name }} Field Signed</h5>
+                                    <p>{{ field.assigned_to.get_full_name|default:field.assigned_to.username }} signed {{ field.name }} for student {{ field.clearance_form.student.school_id }} ({{ field.clearance_form.student.first_name }} {{ field.clearance_form.student.last_name }})</p>
+                                    <div class="activity-meta">
+                                        <i class="far fa-clock me-1"></i> {{ field.signed_at|date:"M d, H:i" }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent clearance activities found.</p>
+                {% endif %}
+                    </div>
+            </div>
+        </div>
+        
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+            <div class="card-header">
+                        <h5 class="mb-0">Report Submissions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 220px;">
+                            <canvas id="reportSubmissionsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">Top Staff Performance</h5>
+            </div>
+            <div class="card-body">
+                {% if staff_signatures %}
+                    <div class="table-responsive">
+                                <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Staff</th>
+                                    <th class="text-end">Signatures</th>
+                                    <th class="text-end">Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for staff in staff_signatures %}
+                                    <tr>
+                                        <td>{{ staff.get_full_name|default:staff.username }}</td>
+                                            <td class="text-end">{{ staff.signatures_count }}</td>
+                                            <td class="text-end">
+                                                <div class="progress" style="height: 6px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {% widthratio staff.signatures_count staff_signatures.0.signatures_count 100 %}%"></div>
+                                                </div>
+                                            </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No signature data available yet.</p>
+                {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'dashboard:admin_students' %}" class="text-decoration-none">
+                    <div class="quick-action-card mb-3 p-3 d-flex align-items-center">
+                        <div class="icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="content">
+                            <h5 class="title">Add New Student</h5>
+                            <p class="description">Register a new student in the system</p>
+                        </div>
+                        <div class="action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'dashboard:import_students' %}" class="text-decoration-none">
+                    <div class="quick-action-card mb-3 p-3 d-flex align-items-center">
+                        <div class="icon" style="background-color: #6c5ce7;">
+                            <i class="fas fa-file-import"></i>
+                        </div>
+                        <div class="content">
+                            <h5 class="title">Import Students</h5>
+                            <p class="description">Batch import students via CSV</p>
+                        </div>
+                        <div class="action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'dashboard:admin_clearance' %}" class="text-decoration-none">
+                    <div class="quick-action-card mb-3 p-3 d-flex align-items-center">
+                        <div class="icon" style="background-color: #00b894;">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="content">
+                            <h5 class="title">Create Clearance Form</h5>
+                            <p class="description">Assign clearance to students</p>
+                        </div>
+                        <div class="action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    </a>
+                
+                <a href="{% url 'dashboard:admin_scan_qr' %}" class="text-decoration-none">
+                    <div class="quick-action-card mb-3 p-3 d-flex align-items-center">
+                        <div class="icon" style="background-color: #ff7675;">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div class="content">
+                            <h5 class="title">Scan Student QR Code</h5>
+                            <p class="description">View and manage student clearance</p>
+                        </div>
+                        <div class="action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    </a>
+                
+                <a href="{% url 'dashboard:export_data' 'students' %}" class="text-decoration-none">
+                    <div class="quick-action-card p-3 d-flex align-items-center">
+                        <div class="icon" style="background-color: #0984e3;">
+                            <i class="fas fa-file-export"></i>
+                        </div>
+                        <div class="content">
+                            <h5 class="title">Export Student Data</h5>
+                            <p class="description">Generate Excel report of all students</p>
+                        </div>
+                        <div class="action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                </div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">System Information</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="system-info-card">
+                    <div class="system-info-item">
+                        <p class="system-info-label">System Status</p>
+                        <p class="system-info-value">
+                            {{ system_status }}
+                            <span class="system-status active">
+                                <i class="fas fa-circle"></i> Active
+                            </span>
+                        </p>
+                    </div>
+                    
+                    <div class="system-info-item">
+                        <p class="system-info-label">Current Academic Term</p>
+                        <p class="system-info-value">{{ current_term }}</p>
+                    </div>
+                    
+                    <div class="system-info-item">
+                        <p class="system-info-label">Database Size</p>
+                        <p class="system-info-value">{{ db_size }}</p>
+                    </div>
+                    
+                    <div class="system-info-item">
+                        <p class="system-info-label">Active Users Today</p>
+                        <p class="system-info-value">{{ active_users_today }} Users</p>
+                    </div>
+                    
+                    <div class="system-info-item">
+                        <p class="system-info-label">Last Backup</p>
+                        <p class="system-info-value">{{ last_backup }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department Statistics Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Department Statistics</h5>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="departmentStatsRange" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if dept_range == 'year' %}
+                            This Year
+                        {% elif dept_range == 'semester' %}
+                            This Semester
+                        {% else %}
+                            All Time
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="departmentStatsRange">
+                        <li><a class="dropdown-item" href="?time_range={{ time_range }}&dept_range=all">All Time</a></li>
+                        <li><a class="dropdown-item" href="?time_range={{ time_range }}&dept_range=year">This Year</a></li>
+                        <li><a class="dropdown-item" href="?time_range={{ time_range }}&dept_range=semester">This Semester</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="chart-container">
+                            <canvas id="departmentStatsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <h6 class="mb-3">Department Completion Rates</h6>
+                        <div class="department-stats-list">
+                            {% for department in departments|slice:":5" %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>{{ department.name }}</span>
+                                    <span class="fw-bold">
+                                        {% if department.students_count > 0 %}
+                                            {{ department.completion_rate|floatformat:0 }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                        style="width: {{ department.completion_rate|floatformat:0 }}%;">
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted">No departments found.</p>
+                            {% endfor %}
+                        </div>
+                        <div class="text-end mt-3">
+                            <a href="{% url 'dashboard:admin_departments' %}" class="btn btn-sm btn-primary">View All Departments</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Course Analysis Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Course Clearance Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="courseAnalysisChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clearance Trend Analysis -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Weekly Clearance</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="weeklyTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Staff Performance Comparison</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="staffPerformanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<!-- ApexCharts -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.36.0/dist/apexcharts.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Clearance Progress Chart
+        const progressCtx = document.getElementById('clearanceProgressChart').getContext('2d');
+        const progressChart = new Chart(progressCtx, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for date in clearance_history.dates %}
+                        "{{ date }}",
+                    {% endfor %}
+                ],
+                datasets: [
+                    {
+                        label: 'Completed',
+                        data: [
+                            {% for count in clearance_history.completed %}
+                                {{ count }},
+                            {% endfor %}
+                        ],
+                        backgroundColor: 'rgba(25, 135, 84, 0.2)',
+                        borderColor: 'rgba(25, 135, 84, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Pending',
+                        data: [
+                            {% for count in clearance_history.pending %}
+                                {{ count }},
+                            {% endfor %}
+                        ],
+                        backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                        borderColor: 'rgba(255, 193, 7, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            drawBorder: false,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Clearance Distribution Chart
+        const distributionCtx = document.getElementById('clearanceDistributionChart').getContext('2d');
+        const distributionChart = new Chart(distributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Complete', 'Pending'],
+                datasets: [{
+                    data: [{{ complete_clearance }}, {{ incomplete_clearance }}],
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.8)',
+                        'rgba(255, 193, 7, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(25, 135, 84, 1)',
+                        'rgba(255, 193, 7, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+        
+        // Report Submissions Chart
+        const reportsCtx = document.getElementById('reportSubmissionsChart').getContext('2d');
+        
+        // Get daily reports data
+        const reportDates = [
+            {% for report in daily_reports %}
+                "{{ report.date|date:'M d' }}",
+            {% endfor %}
+        ];
+        
+        const totalReports = [
+            {% for report in daily_reports %}
+                {{ report.total }},
+            {% endfor %}
+        ];
+        
+        const submittedReports = [
+            {% for report in daily_reports %}
+                {{ report.submitted }},
+            {% endfor %}
+        ];
+        
+        const reportsChart = new Chart(reportsCtx, {
+            type: 'bar',
+            data: {
+                labels: reportDates,
+                datasets: [
+                    {
+                        label: 'Total Reports',
+                        data: totalReports,
+                        backgroundColor: 'rgba(67, 97, 238, 0.7)',
+                        borderColor: 'rgba(67, 97, 238, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Submitted',
+                        data: submittedReports,
+                        backgroundColor: 'rgba(72, 149, 239, 0.7)',
+                        borderColor: 'rgba(72, 149, 239, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            drawBorder: false,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Department Statistics Chart
+        const departmentStatsCtx = document.getElementById('departmentStatsChart').getContext('2d');
+        const departmentStatsChart = new Chart(departmentStatsCtx, {
+            type: 'bar',
+            data: {
+                labels: [
+                    {% for department in departments|slice:":10" %}
+                    '{{ department.name }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Complete',
+                    data: [
+                        {% for department in departments|slice:":10" %}
+                        {{ department.completed_count }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(25, 135, 84, 0.8)',
+                    borderColor: 'rgba(25, 135, 84, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Incomplete',
+                    data: [
+                        {% for department in departments|slice:":10" %}
+                        {{ department.incomplete_count }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                    borderColor: 'rgba(255, 193, 7, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Clearance Status by Department'
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Course Analysis Chart
+        const courseAnalysisCtx = document.getElementById('courseAnalysisChart').getContext('2d');
+        const courseData = {
+            labels: [
+                {% for course in courses|slice:":8" %}
+                '{{ course.name }}',
+                {% endfor %}
+            ],
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Total Students',
+                    data: [
+                        {% for course in courses|slice:":8" %}
+                        {{ course.students_count }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1,
+                    order: 1
+                },
+                {
+                    type: 'line',
+                    label: 'Completion Rate (%)',
+                    data: [
+                        {% for course in courses|slice:":8" %}
+                        {% if course.students_count > 0 %}
+                        {{ course.completion_rate|floatformat:0 }},
+                        {% else %}
+                        0,
+                        {% endif %}
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgba(220, 53, 69, 1)',
+                    yAxisID: 'y1',
+                    order: 0
+                }
+            ]
+        };
+        
+        const courseAnalysisChart = new Chart(courseAnalysisCtx, {
+            type: 'bar',
+            data: courseData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Course Clearance Analysis'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Total Students'
+                        }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Completion Rate (%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Weekly Trend Chart
+        const weeklyTrendCtx = document.getElementById('weeklyTrendChart').getContext('2d');
+        const weeklyTrendChart = new Chart(weeklyTrendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Current Week'],
+                datasets: [{
+                    label: 'Clearance Completion Rate',
+                    data: {{ weekly_completion_rates|safe }},
+                    backgroundColor: 'rgba(32, 201, 151, 0.2)',
+                    borderColor: 'rgba(32, 201, 151, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Staff Performance Chart
+        const staffPerformanceCtx = document.getElementById('staffPerformanceChart').getContext('2d');
+        const staffPerformanceChart = new Chart(staffPerformanceCtx, {
+            type: 'radar',
+            data: {
+                labels: [
+                    {% for staff in staff_signatures|slice:":5" %}
+                    '{{ staff.get_full_name|default:staff.username }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Signatures',
+                    data: [
+                        {% for staff in staff_signatures|slice:":5" %}
+                        {{ staff.signatures_count }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(102, 16, 242, 0.2)',
+                    borderColor: 'rgba(102, 16, 242, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(102, 16, 242, 1)',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

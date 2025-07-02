@@ -1,0 +1,556 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Users Management - ClearTrack{% endblock %}
+
+{% block page_title %}Users Management{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+    <i class="fas fa-user-plus me-2"></i> Add User
+</button>
+    <a href="{% url 'dashboard:admin_landlords' %}" class="btn btn-warning">
+        <i class="fas fa-home me-2"></i> Manage Landlords
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0">All Users</h5>
+                <div class="btn-group mt-2 role-filter" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary active" data-role="all">All</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-role="admin">Admin</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-role="staff">Staff</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-role="user">User</button>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="input-group">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search users...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Date Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.get_full_name|default:"-" }}</td>
+                        <td>{{ user.email|default:"-" }}</td>
+                        <td>
+                            {% if user.is_superuser %}
+                                <span class="badge bg-danger">Superuser</span>
+                            {% elif user.profile.user_type == 'admin' %}
+                                <span class="badge bg-primary">Admin</span>
+                            {% elif user.profile.user_type == 'user' %}
+                                <span class="badge bg-info">User</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Staff</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.profile.department %}
+                                <span class="badge bg-light text-dark">{{ user.profile.department.name }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.profile.is_landlord %}
+                                <span class="badge bg-warning text-dark">Landlord/Landlady</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-primary edit-user" data-bs-toggle="modal" data-bs-target="#editUserModal" data-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-firstname="{{ user.first_name }}" data-lastname="{{ user.last_name }}" data-usertype="{% if user.profile.user_type %}{{ user.profile.user_type }}{% else %}staff{% endif %}" data-department="{{ user.profile.department.id|default:'' }}" data-landlord="{{ user.profile.is_landlord|yesno:'true,false' }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger delete-user" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-id="{{ user.id }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                {% if user.profile.is_landlord %}
+                                <a href="{% url 'dashboard:admin_landlords' %}?landlord_id={{ user.id }}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No users found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:admin_users' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="user_type" class="form-label">Role</label>
+                        <select class="form-select" id="user_type" name="user_type" required>
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin</option>
+                            <option value="user">User</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 landlord-option d-none">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_landlord" name="is_landlord" value="true">
+                            <label class="form-check-label" for="is_landlord">
+                                Landlord/Landlady
+                            </label>
+                            <small class="form-text text-muted d-block">Check if this user is a landlord/landlady who will countersign clearance forms</small>
+                        </div>
+                    </div>
+                    <div class="mb-3 department-field">
+                        <label for="department" class="form-label">Department</label>
+                        <select class="form-select" id="department" name="department_id">
+                            <option value="">No Department</option>
+                            {% for department in departments %}
+                            <option value="{{ department.id }}">{{ department.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-1"></i> Add User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:admin_users' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="user_id" id="edit_user_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="edit_username" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="edit_email" name="email" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="edit_first_name" name="first_name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="edit_last_name" name="last_name">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_user_type" class="form-label">Role</label>
+                        <select class="form-select" id="edit_user_type" name="user_type" required>
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin</option>
+                            <option value="user">User</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 edit-landlord-option d-none">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="edit_is_landlord" name="is_landlord" value="true">
+                            <label class="form-check-label" for="edit_is_landlord">
+                                Landlord/Landlady
+                            </label>
+                            <small class="form-text text-muted d-block">Check if this user is a landlord/landlady who will countersign clearance forms</small>
+                        </div>
+                    </div>
+                    <div class="mb-3 edit-department-field">
+                        <label for="edit_department" class="form-label">Department</label>
+                        <select class="form-select" id="edit_department" name="department_id">
+                            <option value="">No Department</option>
+                            {% for department in departments %}
+                            <option value="{{ department.id }}">{{ department.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="change_password" name="change_password">
+                            <label class="form-check-label" for="change_password">
+                                Change Password
+                            </label>
+                        </div>
+                    </div>
+                    <div id="password_fields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm_new_password" name="confirm_new_password">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUserModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:admin_users' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="user_id" id="delete_user_id">
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-center">Are you sure you want to delete this user? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-1"></i> Delete User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Landlord Modal -->
+<div class="modal fade" id="viewLandlordModal" tabindex="-1" aria-labelledby="viewLandlordModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="viewLandlordModalLabel">Landlord/Landlady Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h5 id="landlord_name" class="mb-3"></h5>
+                    <div id="landlord_signature" class="text-center mb-3"></div>
+                </div>
+                
+                <h6 class="border-bottom pb-2 mb-3">Signed Students</h6>
+                <div id="landlord_students_list" class="table-responsive">
+                    <p class="text-center text-muted">Loading...</p>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const usersTable = document.getElementById('usersTable');
+        
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const rows = usersTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            const activeRoleFilter = document.querySelector('.role-filter .active').getAttribute('data-role');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                let matchesSearch = false;
+                
+                // Check if matches search term
+                for (let j = 0; j < cells.length - 1; j++) {
+                    if (cells[j].textContent.toLowerCase().indexOf(searchTerm) > -1) {
+                        matchesSearch = true;
+                        break;
+                    }
+                }
+                
+                // Check if matches role filter
+                let matchesRole = true;
+                if (activeRoleFilter !== 'all') {
+                    const roleCell = cells[3]; // Role is in the 4th column (index 3)
+                    const roleText = roleCell.textContent.trim().toLowerCase();
+                    
+                    if (activeRoleFilter === 'admin' && !roleText.includes('admin') && !roleText.includes('superuser')) {
+                        matchesRole = false;
+                    } else if (activeRoleFilter === 'staff' && !roleText.includes('staff')) {
+                        matchesRole = false;
+                    } else if (activeRoleFilter === 'user' && !roleText.includes('user')) {
+                        matchesRole = false;
+                    }
+                }
+                
+                // Display row only if it matches both search and role filter
+                rows[i].style.display = (matchesSearch && matchesRole) ? '' : 'none';
+            }
+        }
+        
+        // Set up search event listener
+        searchInput.addEventListener('keyup', filterTable);
+        
+        // Set up role filter buttons
+        const roleFilterButtons = document.querySelectorAll('.role-filter button');
+        roleFilterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active button
+                document.querySelector('.role-filter .active').classList.remove('active');
+                this.classList.add('active');
+                
+                // Apply filters
+                filterTable();
+            });
+        });
+        
+        // Toggle landlord option visibility based on user type
+        const userTypeSelect = document.getElementById('user_type');
+        const landlordOption = document.querySelector('.landlord-option');
+        const isLandlordCheckbox = document.getElementById('is_landlord');
+        const departmentField = document.querySelector('.department-field');
+        
+        if (userTypeSelect) {
+            userTypeSelect.addEventListener('change', function() {
+                if (this.value === 'user') {
+                    landlordOption.classList.remove('d-none');
+                } else {
+                    landlordOption.classList.add('d-none');
+                    isLandlordCheckbox.checked = false;
+                    departmentField.classList.remove('d-none');
+                }
+            });
+        }
+        
+        // Toggle department field visibility based on landlord status
+        if (isLandlordCheckbox) {
+            isLandlordCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    departmentField.classList.add('d-none');
+                    document.getElementById('department').value = '';
+                } else {
+                    departmentField.classList.remove('d-none');
+                }
+            });
+        }
+        
+        // Edit modal: Toggle landlord option visibility based on user type
+        const editUserTypeSelect = document.getElementById('edit_user_type');
+        const editLandlordOption = document.querySelector('.edit-landlord-option');
+        const editIsLandlordCheckbox = document.getElementById('edit_is_landlord');
+        const editDepartmentField = document.querySelector('.edit-department-field');
+        
+        if (editUserTypeSelect) {
+            editUserTypeSelect.addEventListener('change', function() {
+                if (this.value === 'user') {
+                    editLandlordOption.classList.remove('d-none');
+                } else {
+                    editLandlordOption.classList.add('d-none');
+                    editIsLandlordCheckbox.checked = false;
+                    editDepartmentField.classList.remove('d-none');
+                }
+            });
+        }
+        
+        // Toggle department field visibility based on landlord status
+        if (editIsLandlordCheckbox) {
+            editIsLandlordCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    editDepartmentField.classList.add('d-none');
+                    document.getElementById('edit_department').value = '';
+                } else {
+                    editDepartmentField.classList.remove('d-none');
+                }
+            });
+        }
+        
+        // Change password toggle
+        const changePasswordCheckbox = document.getElementById('change_password');
+        const passwordFields = document.getElementById('password_fields');
+        
+        changePasswordCheckbox.addEventListener('change', function() {
+            passwordFields.style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Edit user modal data
+        const editButtons = document.querySelectorAll('.edit-user');
+        
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                const username = this.getAttribute('data-username');
+                const email = this.getAttribute('data-email');
+                const firstName = this.getAttribute('data-firstname');
+                const lastName = this.getAttribute('data-lastname');
+                const userType = this.getAttribute('data-usertype');
+                const departmentId = this.getAttribute('data-department');
+                const isLandlord = this.getAttribute('data-landlord') === 'true';
+                
+                document.getElementById('edit_user_id').value = userId;
+                document.getElementById('edit_username').value = username;
+                document.getElementById('edit_email').value = email;
+                document.getElementById('edit_first_name').value = firstName;
+                document.getElementById('edit_last_name').value = lastName;
+                document.getElementById('edit_user_type').value = userType;
+                document.getElementById('edit_department').value = departmentId;
+                document.getElementById('edit_is_landlord').checked = isLandlord;
+                
+                // Show/hide landlord option based on user type
+                if (userType === 'user') {
+                    editLandlordOption.classList.remove('d-none');
+                } else {
+                    editLandlordOption.classList.add('d-none');
+                }
+                
+                // Show/hide department field based on landlord status
+                if (isLandlord) {
+                    editDepartmentField.classList.add('d-none');
+                } else {
+                    editDepartmentField.classList.remove('d-none');
+                }
+                
+                // Reset password fields
+                document.getElementById('change_password').checked = false;
+                document.getElementById('password_fields').style.display = 'none';
+            });
+        });
+        
+        // Delete user modal data
+        const deleteButtons = document.querySelectorAll('.delete-user');
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                document.getElementById('delete_user_id').value = userId;
+            });
+        });
+        
+        // View landlord modal data
+        const viewLandlordButtons = document.querySelectorAll('.view-landlord');
+        
+        viewLandlordButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                
+                document.getElementById('landlord_name').textContent = name;
+                
+                // Here you would fetch the landlord's signature and signed students
+                // For now, just display a placeholder message
+                document.getElementById('landlord_signature').innerHTML = '<img src="/static/img/placeholder-signature.png" alt="Signature" class="img-fluid" style="max-height: 100px;">';
+                document.getElementById('landlord_students_list').innerHTML = `
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Date Signed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="3" class="text-center">No students signed yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+            });
+        });
+    });
+</script>
+{% endblock %} 

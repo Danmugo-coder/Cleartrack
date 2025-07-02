@@ -1,0 +1,499 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Staff Dashboard - ClearTrack{% endblock %}
+
+{% block page_title %}Staff Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        position: relative;
+        margin-bottom: 24px;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-card-body {
+        padding: 25px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stats-icon {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+    
+    .stats-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .stats-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 5px;
+    }
+    
+    .stats-info {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .stats-bg-primary {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    }
+    
+    .stats-bg-success {
+        background: linear-gradient(135deg, #2ecc71 0%, #1abc9c 100%);
+    }
+    
+    .stats-bg-warning {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    }
+    
+    .stats-bg-info {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    }
+    
+    .clearance-table {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .clearance-table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #495057;
+        padding: 12px 15px;
+    }
+    
+    .clearance-table td {
+        vertical-align: middle;
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .clearance-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .clearance-table tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.7rem;
+        display: inline-block;
+    }
+    
+    .status-badge.signed {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .status-badge.pending {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #fd7e14;
+    }
+    
+    .quick-action-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        margin-bottom: 24px;
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .action-link {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: #212529;
+        background-color: #f8f9fa;
+        border-left: 4px solid transparent;
+    }
+    
+    .action-link:hover {
+        background-color: #fff;
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .action-link.signature:hover {
+        border-left-color: #4361ee;
+    }
+    
+    .action-link.scan:hover {
+        border-left-color: #2ecc71;
+    }
+    
+    .action-link.reports:hover {
+        border-left-color: #f39c12;
+    }
+    
+    .action-link.profile:hover {
+        border-left-color: #3498db;
+    }
+    
+    .action-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-right: 15px;
+        color: white;
+    }
+    
+    .action-icon.signature {
+        background-color: #4361ee;
+    }
+    
+    .action-icon.scan {
+        background-color: #2ecc71;
+    }
+    
+    .action-icon.reports {
+        background-color: #f39c12;
+    }
+    
+    .action-icon.profile {
+        background-color: #3498db;
+    }
+    
+    .action-content {
+        flex: 1;
+    }
+    
+    .action-title {
+        font-weight: 600;
+        margin-bottom: 3px;
+    }
+    
+    .action-desc {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-bottom: 0;
+    }
+    
+    .help-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+    }
+    
+    .help-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .help-card .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .help-step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    
+    .help-step:last-child {
+        margin-bottom: 0;
+    }
+    
+    .step-number {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #4361ee;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .step-content {
+        flex: 1;
+    }
+    
+    .step-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .step-desc {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Row -->
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="stats-card stats-bg-primary">
+            <div class="stats-card-body">
+                <div class="stats-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <p class="stats-label">Total Assigned</p>
+                <h2 class="stats-value">{{ assigned_fields.count }}</h2>
+                <p class="stats-info">Clearance fields assigned to you</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="stats-card stats-bg-success">
+            <div class="stats-card-body">
+                <div class="stats-icon">
+                    <i class="fas fa-signature"></i>
+                </div>
+                <p class="stats-label">Signed Fields</p>
+                <h2 class="stats-value">{{ assigned_fields.signed.count|default:"0" }}</h2>
+                <p class="stats-info">Successfully processed</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="stats-card stats-bg-warning">
+            <div class="stats-card-body">
+                <div class="stats-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <p class="stats-label">Pending Fields</p>
+                <h2 class="stats-value">{{ assigned_fields.pending.count|default:"0" }}</h2>
+                <p class="stats-info">Awaiting your signature</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="stats-card stats-bg-info">
+            <div class="stats-card-body">
+                <div class="stats-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <p class="stats-label">Today's Signatures</p>
+                <h2 class="stats-value">{{ assigned_fields.today.count|default:"0" }}</h2>
+                <p class="stats-info">Signed today</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7 col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-list me-2 text-primary"></i> My Assigned Clearance Fields
+                </h5>
+                <a href="{% url 'dashboard:staff_scan' %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-qrcode me-1"></i> Scan QR
+                </a>
+            </div>
+            <div class="card-body">
+                {% if assigned_fields %}
+                    <div class="table-responsive">
+                        <table class="table clearance-table">
+                            <thead>
+                                <tr>
+                                    <th>Field Name</th>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                    <th>Signed At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for field in assigned_fields %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ field.name }}</strong>
+                                        </td>
+                                        <td>
+                                            <div>{{ field.form.student.last_name }}, {{ field.form.student.first_name }}</div>
+                                            <small class="text-muted">{{ field.form.student.school_id }}</small>
+                                        </td>
+                                        <td>
+                                            {% if field.status %}
+                                                <span class="status-badge signed">
+                                                    <i class="fas fa-check-circle me-1"></i> Signed
+                                                </span>
+                                            {% else %}
+                                                <span class="status-badge pending">
+                                                    <i class="fas fa-clock me-1"></i> Pending
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if field.signed_at %}
+                                                <div>{{ field.signed_at|date:"M d, Y" }}</div>
+                                                <small class="text-muted">{{ field.signed_at|date:"H:i" }}</small>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No clearance fields have been assigned to you yet.</p>
+                        <p class="text-muted small">Once fields are assigned, they will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-5 col-md-6">
+        <div class="quick-action-card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-primary"></i> Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'dashboard:staff_signature' %}" class="action-link signature">
+                    <div class="action-icon signature">
+                        <i class="fas fa-signature"></i>
+                    </div>
+                    <div class="action-content">
+                        <h6 class="action-title">Manage My Signature</h6>
+                        <p class="action-desc">Create or update your digital signature</p>
+                    </div>
+                </a>
+                
+                <a href="{% url 'dashboard:staff_scan' %}" class="action-link scan">
+                    <div class="action-icon scan">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="action-content">
+                        <h6 class="action-title">Scan QR Code</h6>
+                        <p class="action-desc">Sign clearance forms by scanning student QR codes</p>
+                    </div>
+                </a>
+                
+                <a href="{% url 'dashboard:staff_reports' %}" class="action-link reports">
+                    <div class="action-icon reports">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="action-content">
+                        <h6 class="action-title">View Today's Report</h6>
+                        <p class="action-desc">Check your daily clearance activity report</p>
+                    </div>
+                </a>
+                
+                <a href="{% url 'accounts:profile' %}" class="action-link profile">
+                    <div class="action-icon profile">
+                        <i class="fas fa-user-cog"></i>
+                    </div>
+                    <div class="action-content">
+                        <h6 class="action-title">Update Profile</h6>
+                        <p class="action-desc">Manage your account information</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="help-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-question-circle me-2 text-primary"></i> How to Sign Clearances
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="help-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h6 class="step-title">Access Scanner</h6>
+                        <p class="step-desc">Click "Scan QR Code" in the sidebar or quick actions</p>
+                    </div>
+                </div>
+                
+                <div class="help-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h6 class="step-title">Scan Student QR</h6>
+                        <p class="step-desc">Use your device's camera to scan the student's unique QR code</p>
+                    </div>
+                </div>
+                
+                <div class="help-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h6 class="step-title">Verify Information</h6>
+                        <p class="step-desc">Check the student's details to ensure they match their records</p>
+                    </div>
+                </div>
+                
+                <div class="help-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h6 class="step-title">Sign Clearance</h6>
+                        <p class="step-desc">Click the "Sign" button to apply your digital signature</p>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="fas fa-info-circle me-2"></i> Your daily report will automatically include all signatures processed during the day.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

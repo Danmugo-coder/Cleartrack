@@ -1,0 +1,134 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Print QR Code - {{ student.school_id }} - ClearTrack{% endblock %}
+
+{% block extra_head %}
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        body {
+            padding: 0;
+            margin: 0;
+            background: #fff;
+        }
+        
+        .qr-card {
+            page-break-inside: avoid;
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+    }
+    
+    .qr-card {
+        width: 450px;
+        margin: 15px auto;
+    }
+    
+    .qr-image {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .student-info {
+        padding-left: 15px;
+    }
+    
+    .student-detail {
+        margin-bottom: 8px;
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        margin-right: 5px;
+    }
+    
+    .detail-value {
+        font-size: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row no-print">
+        <div class="col-12 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>Print QR Code</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print QR
+                    </button>
+                    <a href="{% url 'dashboard:admin_students' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Students
+                    </a>
+                </div>
+            </div>
+            <hr>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card qr-card">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <h5 class="card-title">Student Clearance QR</h5>
+                    </div>
+                    
+                    <div class="d-flex">
+                        {% if student.qr_code %}
+                        <div class="qr-image">
+                            <img src="{{ student.qr_code.url }}" alt="QR Code" class="img-fluid">
+                        </div>
+                        {% else %}
+                        <div class="qr-image d-flex align-items-center justify-content-center">
+                            <p class="text-danger">QR code not generated</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="student-info">
+                            <div class="student-detail">
+                                <span class="detail-label">Name:</span>
+                                <span class="detail-value">{{ student.last_name }}, {{ student.first_name }}</span>
+                            </div>
+                            <div class="student-detail">
+                                <span class="detail-label">ID:</span>
+                                <span class="detail-value">{{ student.school_id }}</span>
+                            </div>
+                            <div class="student-detail">
+                                <span class="detail-label">Department:</span>
+                                <span class="detail-value">{{ student.department.name }}</span>
+                            </div>
+                            <div class="student-detail">
+                                <span class="detail-label">Course, Year & Section:</span>
+                                <span class="detail-value">{{ student.course.name }} | {{ student.year_section.year }}-{{ student.year_section.section }}</span>
+                            </div>
+                            <div class="student-detail">
+                                <span class="detail-label">QR ID:</span>
+                                <span class="detail-value">{{ student.token }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if print mode is enabled
+        var printMode = {% if print_mode %}true{% else %}false{% endif %};
+        if (printMode) {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h2>✅ Payment Successful!</h2>
+    <p>Thank you for your payment. A receipt has been emailed to you.</p>
+
+    {% if invoice_url %}
+        <a href="{{ invoice_url }}" class="btn btn-success mt-3" download>
+            Download Invoice (PDF)
+        </a>
+    {% else %}
+        <p class="text-danger">Invoice not available.</p>
+    {% endif %}
+    
+    <br><br>
+    <a href="{% url 'dashboard:user_dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+</div>
+{% endblock %}

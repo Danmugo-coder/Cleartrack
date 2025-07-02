@@ -1,0 +1,614 @@
+{% extends 'core/base.html' %}
+
+{% block title %}User Dashboard - ClearTrack{% endblock %}
+
+{% block page_title %}User Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        position: relative;
+        margin-bottom: 24px;
+        height: 100%;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-card-body {
+        padding: 25px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stats-icon {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+    
+    .stats-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .stats-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 5px;
+    }
+    
+    .stats-info {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .stats-bg-primary {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    }
+    
+    .stats-bg-success {
+        background: linear-gradient(135deg, #2ecc71 0%, #1abc9c 100%);
+    }
+    
+    .stats-bg-warning {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    }
+    
+    .stats-bg-info {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    }
+    
+    .profile-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        margin-bottom: 24px;
+    }
+    
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        padding: 30px 20px;
+        text-align: center;
+        position: relative;
+    }
+    
+    .profile-header-bg {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        opacity: 0.1;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .avatar-container {
+        position: relative;
+        z-index: 1;
+        margin-bottom: 15px;
+    }
+    
+    .avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 5px solid white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin: 0 auto;
+        object-fit: cover;
+    }
+    
+    .avatar-placeholder {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+        border: 5px solid white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .profile-name {
+        color: white;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+    
+    .profile-role {
+        display: inline-block;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .profile-info {
+        padding: 20px;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-icon {
+        width: 36px;
+        height: 36px;
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary-color);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        margin-right: 15px;
+    }
+    
+    .info-content {
+        flex: 1;
+    }
+    
+    .info-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-bottom: 3px;
+    }
+    
+    .info-value {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .signature-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+    }
+    
+    .signature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .signature-preview {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        min-height: 100px;
+    }
+    
+    .signature-image {
+        max-height: 80px;
+        max-width: 100%;
+    }
+    
+    .action-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-icon {
+        margin-right: 8px;
+    }
+    
+    .clearance-table {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .clearance-table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #495057;
+        padding: 12px 15px;
+    }
+    
+    .clearance-table td {
+        vertical-align: middle;
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .clearance-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .clearance-table tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.7rem;
+        display: inline-block;
+    }
+    
+    .status-badge.signed {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .status-badge.pending {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #fd7e14;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
+        color: #adb5bd;
+        margin-bottom: 20px;
+    }
+    
+    .empty-title {
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    
+    .empty-text {
+        color: #adb5bd;
+        max-width: 300px;
+        margin: 0 auto 20px;
+    }
+    
+    .quick-scan-btn {
+        padding: 15px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        transition: all 0.3s;
+    }
+    
+    .quick-scan-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards Row -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+        <div class="stats-card stats-bg-primary">
+            <div class="stats-card-body">
+                <div class="stats-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <p class="stats-label">Total Assigned</p>
+                <h2 class="stats-value">{{ assigned_fields.count }}</h2>
+                <p class="stats-info">Clearance fields assigned</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+        <div class="stats-card stats-bg-success">
+            <div class="stats-card-body">
+                <div class="stats-icon">
+                    <i class="fas fa-signature"></i>
+                </div>
+                <p class="stats-label">Signed Fields</p>
+                <h2 class="stats-value">{{ assigned_fields.signed.count|default:"0" }}</h2>
+                <p class="stats-info">Successfully processed</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+        <div class="stats-card stats-bg-warning">
+            <div class="stats-card-body">
+                <div class="stats-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <p class="stats-label">Pending Fields</p>
+                <h2 class="stats-value">{{ assigned_fields.pending.count|default:"0" }}</h2>
+                <p class="stats-info">Awaiting your signature</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+        <div class="stats-card stats-bg-info">
+            <div class="stats-card-body">
+                <div class="stats-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <p class="stats-label">Today's Activity</p>
+                <h2 class="stats-value">{{ assigned_fields.today.count|default:"0" }}</h2>
+                <p class="stats-info">Signed today</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <!-- Profile Card -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-header-bg"></div>
+                <div class="avatar-container">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}" class="avatar">
+                    {% else %}
+                        <div class="avatar-placeholder rounded-circle bg-primary text-white d-flex align-items-center justify-content-center">
+                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                <h5 class="profile-name">{{ user.get_full_name }}</h5>
+                <span class="profile-role">User</span>
+                {% if is_landlord %}
+                <span class="profile-role bg-warning text-dark mt-2">
+                    <i class="fas fa-home me-1"></i> Landlord/Landlady
+                </span>
+                {% endif %}
+            </div>
+            
+            <div class="profile-info">
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="info-content">
+                        <p class="info-label">Username</p>
+                        <p class="info-value">{{ user.username }}</p>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="info-content">
+                        <p class="info-label">Email Address</p>
+                        <p class="info-value">{{ user.email }}</p>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="info-content">
+                        <p class="info-label">Last Login</p>
+                        <p class="info-value">{{ user.last_login|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-primary action-btn w-100">
+                        <i class="fas fa-user-edit btn-icon"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Signature Card -->
+        <div class="signature-card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-signature me-2 text-primary"></i> Digital Signature
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="signature-preview">
+                    {% if user.profile.signature %}
+                        <img src="{{ user.profile.signature.url }}" alt="Your Signature" class="signature-image">
+                    {% else %}
+                        <p class="text-muted mb-0">No signature available</p>
+                    {% endif %}
+                </div>
+                
+                {% if user.profile.signature %}
+                    <div class="alert alert-success d-flex align-items-center mb-4">
+                        <i class="fas fa-check-circle me-3 fs-4"></i>
+                        <div>
+                            Your signature is set up and ready to use for signing clearance forms.
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning d-flex align-items-center mb-4">
+                        <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                        <div>
+                            Please set up your signature before you can sign clearance forms.
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <a href="{% url 'dashboard:user_signature' %}" class="btn btn-outline-primary action-btn w-100">
+                    <i class="fas fa-signature btn-icon"></i> {% if user.profile.signature %}Update{% else %}Set Up{% endif %} Signature
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    {% if is_landlord %}
+                    <i class="fas fa-home me-2 text-warning"></i> Landlord/Landlady Dashboard
+                    {% else %}
+                    <i class="fas fa-clipboard-list me-2 text-primary"></i> Your Assigned Clearance Fields
+                    {% endif %}
+                </h5>
+                <a href="{% url 'dashboard:user_scan' %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-qrcode me-1"></i> Scan QR
+                </a>
+            </div>
+            <div class="card-body">
+                {% if is_landlord %}
+                    <div class="alert alert-warning mb-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-info-circle fs-3"></i>
+                            </div>
+                            <div>
+                                <h5 class="alert-heading">Landlord/Landlady Mode</h5>
+                                <p class="mb-0">As a landlord/landlady, you can countersign clearance forms for students. Scan a student's QR code to sign their clearance form.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <i class="fas fa-qrcode fs-1 text-primary"></i>
+                                    </div>
+                                    <h5>Scan Student QR</h5>
+                                    <p class="text-muted small">Scan a student's QR code to countersign their clearance form</p>
+                                    <a href="{% url 'dashboard:user_scan' %}" class="btn btn-primary">
+                                        <i class="fas fa-qrcode me-2"></i> Scan Now
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <i class="fas fa-history fs-1 text-info"></i>
+                                    </div>
+                                    <h5>View Signatures</h5>
+                                    <p class="text-muted small">View all students you've signed for</p>
+                                    <a href="{% url 'dashboard:landlord_signatures' %}" class="btn btn-info">
+                                        <i class="fas fa-list me-2"></i> View All
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <p class="text-muted">Need help? Contact the system administrator for assistance.</p>
+                    </div>
+                {% elif assigned_fields %}
+                    <div class="table-responsive">
+                        <table class="table clearance-table">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Student</th>
+                                    <th>Course</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for field in assigned_fields %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ field.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <div>{{ field.form.student.first_name }} {{ field.form.student.last_name }}</div>
+                                        <small class="text-muted">ID: {{ field.form.student.school_id }}</small>
+                                    </td>
+                                    <td>{{ field.form.student.course.name }}</td>
+                                    <td>
+                                        {% if field.status %}
+                                            <span class="status-badge signed">
+                                                <i class="fas fa-check-circle me-1"></i> Signed
+                                            </span>
+                                        {% else %}
+                                            <span class="status-badge pending">
+                                                <i class="fas fa-clock me-1"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not field.status %}
+                                            <a href="{% url 'dashboard:user_scan' %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-signature"></i>
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted small">{{ field.signed_at|date:"M d, Y" }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <h4 class="empty-title">No Clearance Fields Assigned</h4>
+                        <p class="empty-text">You don't have any clearance fields assigned to you at the moment.</p>
+                        
+                        <a href="{% url 'dashboard:user_scan' %}" class="btn btn-primary quick-scan-btn">
+                            <i class="fas fa-qrcode me-2"></i> Scan QR Code
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

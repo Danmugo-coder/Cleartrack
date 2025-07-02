@@ -1,0 +1,531 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Scan QR Code - ClearTrack{% endblock %}
+
+{% block page_title %}Scan QR Code{% endblock %}
+
+{% block extra_css %}
+<style>
+    #qr-video {
+        width: 100%;
+        border-radius: 8px;
+    }
+    
+    #qr-canvas {
+        display: none;
+    }
+    
+    .scan-area {
+        position: relative;
+        border: 2px dashed #0d6efd;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .scan-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+    
+    .scan-target {
+        width: 200px;
+        height: 200px;
+        border: 2px solid #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        position: relative;
+    }
+    
+    .scan-line {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(13, 110, 253, 0), rgba(13, 110, 253, 0.8), rgba(13, 110, 253, 0));
+        top: 0;
+        box-shadow: 0 0 8px 2px rgba(13, 110, 253, 0.5);
+        animation: scanAnimation 2s linear infinite;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .scanning .scan-line {
+        opacity: 1;
+    }
+    
+    @keyframes scanAnimation {
+        0% {
+            top: 0;
+        }
+        100% {
+            top: 200px;
+        }
+    }
+    
+    .scan-corners {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        pointer-events: none;
+    }
+    
+    .scan-corners::before,
+    .scan-corners::after,
+    .scan-corners span::before,
+    .scan-corners span::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-color: #4361ee;
+        border-style: solid;
+        border-width: 0;
+    }
+    
+    /* Top left corner */
+    .scan-corners::before {
+        top: 0;
+        left: 0;
+        border-top-width: 3px;
+        border-left-width: 3px;
+        border-top-left-radius: 8px;
+    }
+    
+    /* Top right corner */
+    .scan-corners::after {
+        top: 0;
+        right: 0;
+        border-top-width: 3px;
+        border-right-width: 3px;
+        border-top-right-radius: 8px;
+    }
+    
+    /* Bottom left corner */
+    .scan-corners span::before {
+        bottom: 0;
+        left: 0;
+        border-bottom-width: 3px;
+        border-left-width: 3px;
+        border-bottom-left-radius: 8px;
+    }
+    
+    /* Bottom right corner */
+    .scan-corners span::after {
+        bottom: 0;
+        right: 0;
+        border-bottom-width: 3px;
+        border-right-width: 3px;
+        border-bottom-right-radius: 8px;
+    }
+    
+    .student-card {
+        border-left: 4px solid #0d6efd;
+        transition: all 0.3s;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .student-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .field-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    
+    .field-item {
+        padding: 15px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        transition: all 0.2s;
+        cursor: pointer;
+        background-color: #f8f9fa;
+    }
+    
+    .field-item:hover {
+        background-color: #fff;
+        transform: translateX(5px);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .camera-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .camera-controls button {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+    }
+    
+    .camera-controls button i {
+        margin-right: 8px;
+    }
+    
+    .camera-switch-btn {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    .camera-switch-btn:hover {
+        background-color: #5c636a;
+        border-color: #565e64;
+    }
+    
+    .recent-scan-item {
+        padding: 12px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        margin-bottom: 10px;
+        transition: all 0.3s;
+        border-left: 3px solid #4361ee;
+    }
+    
+    .recent-scan-item:hover {
+        background-color: #fff;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        transform: translateX(5px);
+    }
+    
+    .recent-scan-time {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .success-feedback {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(25, 135, 84, 0.9);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        z-index: 1050;
+        display: flex;
+        align-items: center;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s;
+    }
+    
+    .success-feedback.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .success-feedback i {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    
+    @media (max-width: 768px) {
+        .camera-controls {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Scan Student QR Code</h5>
+            </div>
+            <div class="card-body">
+                <div class="scan-area">
+                    <div id="qr-reader" style="width: 100%;"></div>
+                    <div class="scan-overlay" style="display: none;">
+                        <div class="scan-target">
+                            <div class="scan-line"></div>
+                            <div class="scan-corners"><span></span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="camera-controls">
+                    <button id="start-scan" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Start Camera
+                    </button>
+                    <button id="switch-camera" class="btn camera-switch-btn text-white" disabled>
+                        <i class="fas fa-sync-alt"></i> Switch Camera
+                    </button>
+                    <button id="stop-scan" class="btn btn-secondary" disabled>
+                        <i class="fas fa-stop"></i> Stop Camera
+                    </button>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Position the QR code within the scanning area.
+                </div>
+                
+                <div class="mt-4">
+                    <form method="post" id="qr-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="token" class="form-label">QR Code Value</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="token" name="token" placeholder="Scan QR code or enter token manually">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i> Verify
+                                </button>
+                            </div>
+                            <div class="form-text">The QR code value will be filled automatically when scanned.</div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Instructions</h5>
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li>Click "Start Camera" to activate your device's camera</li>
+                    <li>Use "Switch Camera" if needed to change between front and rear cameras</li>
+                    <li>Position the student's QR code within the scanning area</li>
+                    <li>The system will automatically detect and verify the student</li>
+                </ol>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> If the camera doesn't work, you can manually enter the QR code value in the input field.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Scans</h5>
+            </div>
+            <div class="card-body">
+                <div id="recent-scans">
+                    <p class="text-muted">No recent scans found.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="success-feedback" id="success-feedback">
+    <i class="fas fa-check-circle"></i>
+    <div>
+        <h6 class="mb-0">QR Code Detected!</h6>
+        <p class="mb-0 small">Redirecting to student information...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startButton = document.getElementById('start-scan');
+        const stopButton = document.getElementById('stop-scan');
+        const switchButton = document.getElementById('switch-camera');
+        const tokenInput = document.getElementById('token');
+        const qrForm = document.getElementById('qr-form');
+        const scanArea = document.querySelector('.scan-area');
+        const scanOverlay = document.querySelector('.scan-overlay');
+        const successFeedback = document.getElementById('success-feedback');
+        
+        let html5QrCode = null;
+        let currentFacingMode = 'environment'; // Default to back camera
+        let recentScans = [];
+        
+        // Start camera
+        startButton.addEventListener('click', function() {
+            startCamera();
+        });
+        
+        // Stop camera
+        stopButton.addEventListener('click', function() {
+            stopCamera();
+        });
+        
+        // Switch camera
+        switchButton.addEventListener('click', function() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+                    startCamera();
+                }).catch(err => {
+                    console.error("Error stopping camera:", err);
+                });
+            }
+        });
+        
+        function startCamera() {
+            const qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
+                let minEdgePercentage = 0.7;
+                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                return {
+                    width: qrboxSize,
+                    height: qrboxSize
+                };
+            };
+            
+            const config = { 
+                fps: 10,
+                qrbox: qrboxFunction,
+                aspectRatio: 1.0,
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+            };
+            
+            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            const facingModeConstraint = { facingMode: currentFacingMode };
+            
+            html5QrCode.start(
+                { facingMode: currentFacingMode },
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).then(() => {
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                switchButton.disabled = false;
+                scanArea.classList.add('scanning');
+                scanOverlay.style.display = "flex";
+            }).catch((err) => {
+                console.error("Error starting camera:", err);
+                alert("Could not access the camera. Please check permissions or try another device.");
+            });
+        }
+        
+        function stopCamera() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    startButton.disabled = false;
+                    stopButton.disabled = true;
+                    switchButton.disabled = true;
+                    scanArea.classList.remove('scanning');
+                    scanOverlay.style.display = "none";
+                }).catch((err) => {
+                    console.error("Error stopping camera:", err);
+                });
+            }
+        }
+        
+        // Process QR code success
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log("QR Code detected:", decodedText);
+
+            showSuccessFeedback();
+            
+            // Extract token from URL if it's a URL
+            let token = decodedText;
+            try {
+                const url = new URL(decodedText);
+                const pathParts = url.pathname.split('/');
+                // Try to get token from URL path
+                if (pathParts.length > 2) {
+                    token = pathParts[pathParts.length - 2];
+                }
+            } catch (e) {
+                console.log("Using raw QR data as token");
+            }
+            
+            // Add to recent scans
+            addToRecentScans(token);
+            
+            // Fill the input and submit the form
+            tokenInput.value = token;
+            
+            // Short delay before submitting to show the success feedback
+            setTimeout(() => {
+                qrForm.submit();
+            }, 800);
+         
+            stopCamera();
+        }
+        
+        // Process QR code failure
+        function onScanFailure(error) {
+            console.debug(`QR scan failure: ${error}`);
+        }
+        
+        // Show success feedback
+        function showSuccessFeedback() {
+            const beep = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBhxQoN/zsXAjChZHltzxtHQrEBlEjtXusXcyFx1EicnirXo6ICFEgb3dpH9DKSZD..."); // Base64 encoded short beep sound
+            beep.volume = 0.2;
+            beep.play().catch(e => console.log("Audio play failed:", e));
+            
+            // Show visual feedback
+            successFeedback.classList.add('show');
+            setTimeout(() => {
+                successFeedback.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Add scan to recent scans
+        function addToRecentScans(token) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            recentScans.unshift({
+                token: token,
+                time: timeString
+            });
+            
+            // Keep only the 5 most recent scans
+            if (recentScans.length > 5) {
+                recentScans.pop();
+            }
+            
+            updateRecentScansUI();
+        }
+        
+        // Update the recent scans UI
+        function updateRecentScansUI() {
+            const recentScansContainer = document.getElementById('recent-scans');
+            
+            if (recentScans.length === 0) {
+                recentScansContainer.innerHTML = '<p class="text-muted">No recent scans found.</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            recentScans.forEach(scan => {
+                html += `
+                    <div class="recent-scan-item">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>Token:</strong> ${scan.token.substring(0, 15)}...
+                            </div>
+                            <div class="recent-scan-time">
+                                ${scan.time}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            recentScansContainer.innerHTML = html;
+        }
+    });
+</script>
+{% endblock %} 

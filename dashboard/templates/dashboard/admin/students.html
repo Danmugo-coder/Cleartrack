@@ -1,0 +1,1632 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Students Management - ClearTrack{% endblock %}
+
+{% block page_title %}Students Management{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+        <i class="fas fa-user-plus me-2"></i> Add Student
+    </button>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+        <i class="fas fa-file-csv me-2"></i> Import CSV
+    </button>
+    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#printQrModal">
+        <i class="fas fa-qrcode me-2"></i> Print QR Codes
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Students</h5>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-sm btn-outline-secondary" type="button" id="resetFilters">
+                    <i class="fas fa-redo me-1"></i> Reset Filters
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="courseFilter" class="form-label">Course</label>
+                <select id="courseFilter" class="form-select">
+                    <option value="">All Courses</option>
+                    {% for course in courses %}
+                    <option value="{{ course.id }}">{{ course.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="yearSectionFilter" class="form-label">Year & Section</label>
+                <select id="yearSectionFilter" class="form-select">
+                    <option value="">All Sections</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="semesterFilter" class="form-label">Semester</label>
+                <select id="semesterFilter" class="form-select">
+                    <option value="">All Semesters</option>
+                    <option value="1st_semester">1st Semester</option>
+                    <option value="2nd_semester">2nd Semester</option>
+                    <option value="summer">Summer</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="termFilter" class="form-label">Term</label>
+                <select id="termFilter" class="form-select">
+                    <option value="">All Terms</option>
+                    <option value="midterm">Midterm</option>
+                    <option value="final">Final</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="statusFilter" class="form-label">Clearance Status</label>
+                <select id="statusFilter" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="complete">Complete</option>
+                </select>
+            </div>
+            <div class="col-md-9">
+                <label for="searchInput" class="form-label">Search</label>
+                <div class="input-group">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by name, ID, email...">
+                    <button class="btn btn-primary" type="button">
+                        <i class="fas fa-search me-2"></i> Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-light">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i>All Students</h5>
+            </div>
+            <div class="col-auto">
+                <span class="badge bg-primary rounded-pill" id="studentCount">{{ students|length }} Students</span>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="studentsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Course</th>
+                        <th>Year & Section</th>
+                        <th>Semester</th>
+                        <th>Term</th>
+                        <th>Clearance Status</th>
+                        <th>QR Code</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr data-course-id="{{ student.course.id }}" data-section-id="{{ student.year_section.id }}" data-semester="{{ student.semester }}" data-term="{{ student.term }}" data-status="{{ student.clearance_status }}">
+                        <td><span class="badge bg-dark">{{ student.school_id }}</span></td>
+                        <td>{{ student.last_name }}, {{ student.first_name }} {% if student.middle_name %}{{ student.middle_name.0 }}.{% endif %}</td>
+                        <td><small class="text-muted">{{ student.course.name }}</small></td>
+                        <td><span class="badge bg-secondary">{{ student.year_section.year }} - {{ student.year_section.section }}</span></td>
+                        <td><span class="badge bg-info text-dark">{{ student.get_semester_display }}</span></td>
+                        <td><span class="badge bg-info text-dark">{{ student.get_term_display }}</span></td>
+                        <td>
+                            {% if student.clearance_status == 'complete' %}
+                                <span class="badge bg-success"><i class="fas fa-check me-1"></i>Complete</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>In Progress</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary view-qr" data-bs-toggle="modal" data-bs-target="#viewQrModal" 
+                                data-id="{{ student.id }}" 
+                                data-name="{{ student.first_name }} {{ student.last_name }}" 
+                                data-qr="{{ student.qr_code.url }}"
+                                data-school-id="{{ student.school_id }}"
+                                data-department="{{ student.department.name }}"
+                                data-course="{{ student.course.name }}"
+                                data-year-section="{{ student.year_section.year }}-{{ student.year_section.section }}"
+                                data-token="{{ student.token }}">
+                                <i class="fas fa-qrcode"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-primary edit-student" data-bs-toggle="modal" data-bs-target="#editStudentModal" 
+                                       data-id="{{ student.id }}"
+                                       data-school-id="{{ student.school_id }}"
+                                       data-email="{{ student.email }}"
+                                       data-first-name="{{ student.first_name }}"
+                                       data-middle-name="{{ student.middle_name|default:'' }}"
+                                       data-last-name="{{ student.last_name }}"
+                                       data-contact="{{ student.contact_number }}"
+                                       data-semester="{{ student.semester }}"
+                                       data-term="{{ student.term }}"
+                                       data-course="{{ student.course.id }}"
+                                       data-section="{{ student.year_section.id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-info view-clearance" data-bs-toggle="tooltip" title="View Clearance" data-token="{{ student.token }}">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger delete-student" data-bs-toggle="modal" data-bs-target="#deleteStudentModal" data-id="{{ student.id }}" data-name="{{ student.first_name }} {{ student.last_name }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-user-graduate text-muted" style="font-size: 3.5rem;"></i>
+                            </div>
+                            <h5 class="text-muted">No students found</h5>
+                            <p class="text-muted mb-3">Add a new student or adjust your filters</p>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                                <i class="fas fa-user-plus me-2"></i> Add Student
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addStudentModalLabel"><i class="fas fa-user-plus me-2"></i>Add New Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:admin_students' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> Fill in the student details below. Fields marked with * are required.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Basic Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="school_id" class="form-label">School ID *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                        <input type="text" class="form-control" id="school_id" name="school_id" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                        <input type="email" class="form-control" id="email" name="email" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="first_name" class="form-label">First Name *</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="middle_name" class="form-label">Middle Name</label>
+                                    <input type="text" class="form-control" id="middle_name" name="middle_name">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="last_name" class="form-label">Last Name *</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contact" class="form-label">Contact Number</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                        <input type="text" class="form-control" id="contact" name="contact_number">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Academic Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="course" class="form-label">Course *</label>
+                                    <select class="form-select" id="course" name="course" required>
+                                        <option value="">Select Course</option>
+                                        {% for course in courses %}
+                                        <option value="{{ course.id }}">{{ course.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="year_section" class="form-label">Year & Section *</label>
+                                    <select class="form-select" id="year_section" name="year_section" required>
+                                        <option value="">Select Year & Section</option>
+                                    </select>
+                                    <div class="form-text" id="sectionHelp">First select a course to see available sections.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="semester" class="form-label">Semester *</label>
+                                    <select class="form-select" id="semester" name="semester" required>
+                                        <option value="">Select Semester</option>
+                                        <option value="1st_semester">1st Semester</option>
+                                        <option value="2nd_semester">2nd Semester</option>
+                                        <option value="summer">Summer</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="term" class="form-label">Term *</label>
+                                    <select class="form-select" id="term" name="term" required>
+                                        <option value="">Select Term</option>
+                                        <option value="midterm">Midterm</option>
+                                        <option value="final">Final</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Add Student
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View QR Modal -->
+<div class="modal fade" id="viewQrModal" tabindex="-1" aria-labelledby="viewQrModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewQrModalLabel">Student QR Code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="student-details mb-3">
+                            <p class="mb-1"><strong>Name:</strong> <span id="qrStudentName"></span></p>
+                            <p class="mb-1"><strong>ID:</strong> <span id="qrStudentId"></span></p>
+                            <p class="mb-1"><strong>Department:</strong> <span id="qrStudentDepartment"></span></p>
+                            <p class="mb-1"><strong>Course, Year & Section:</strong> <span id="qrStudentCourseYearSection"></span></p>
+                            <p class="mb-1"><strong>QR ID:</strong> <span id="qrUuidToken"></span></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <img id="qrImage" src="" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <small>Scan this QR code to view and sign the student's clearance form.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <form id="printQrForm" action="{% url 'dashboard:print_qr' 0 %}" method="get">
+                    <input type="hidden" id="student_id_for_qr" name="student_id" value="">
+                    <button type="submit" class="btn btn-primary" id="printQr">
+                        <i class="fas fa-print me-2"></i> Print QR Code
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Student Modal -->
+<div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editStudentModalLabel">Edit Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:admin_students' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="student_id" id="edit_student_id">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="edit_school_id" class="form-label">School ID</label>
+                            <input type="text" class="form-control" id="edit_school_id" name="school_id" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit_email" name="email" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="edit_first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_middle_name" class="form-label">Middle Name</label>
+                            <input type="text" class="form-control" id="edit_middle_name" name="middle_name">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="edit_last_name" name="last_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_contact_number" class="form-label">Contact Number</label>
+                            <input type="text" class="form-control" id="edit_contact_number" name="contact_number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_semester" class="form-label">Semester</label>
+                            <select class="form-select" id="edit_semester" name="semester" required>
+                                <option value="">Select Semester</option>
+                                <option value="1st_semester">1st Semester</option>
+                                <option value="2nd_semester">2nd Semester</option>
+                                <option value="summer">Summer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_term" class="form-label">Term</label>
+                            <select class="form-select" id="edit_term" name="term" required>
+                                <option value="">Select Term</option>
+                                <option value="midterm">Midterm</option>
+                                <option value="final">Final</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_course" class="form-label">Course</label>
+                            <select class="form-select" id="edit_course" name="course" required>
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_year_section" class="form-label">Year & Section</label>
+                            <select class="form-select" id="edit_year_section" name="year_section" required>
+                                <option value="">Select Year & Section</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Student Modal -->
+<div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-labelledby="deleteStudentModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteStudentModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:admin_students' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="student_id" id="delete_student_id">
+                <div class="modal-body">
+                    <p>Are you sure you want to delete <strong id="delete_student_name"></strong>?</p>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i> This will also delete all clearance records associated with this student.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import CSV Modal -->
+<div class="modal fade" id="importCsvModal" tabindex="-1" aria-labelledby="importCsvModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importCsvModalLabel">Import Students from CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Step 1: Upload CSV -->
+                <div class="step-1">
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                        <small class="text-muted">Only Microsoft Excel Comma Separated Values (.csv) files are supported</small>
+                    </div>
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">CSV Format</h6>
+                        <p class="mb-0">Your CSV file must include these headers:</p>
+                        <small>
+                            <code>first_name,last_name,middle_name,email,contact_number,school_id,course,year,section,semester,term</code>
+                        </small>
+                        <hr>
+                        <p class="mb-0">The following fields are required:</p>
+                        <ul class="mb-0">
+                            <li>first_name</li>
+                            <li>last_name</li>
+                            <li>email</li>
+                            <li>school_id</li>
+                            <li>course</li>
+                            <li>year</li>
+                            <li>section</li>
+                        </ul>
+                        <p class="mt-2 mb-0">Semester options: 1st_semester, 2nd_semester, summer</p>
+                        <p class="mt-2 mb-0">Term options: midterm, final</p>
+                        <p class="mt-2 mb-0">QR codes and tokens will be generated automatically.</p>
+                    </div>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-primary" id="previewCsvBtn">
+                            <i class="fas fa-eye me-2"></i> Preview Data
+                        </button>
+                    </div>
+                    <div id="csvErrorContainer" class="mt-3 alert alert-danger d-none">
+                        <i class="fas fa-exclamation-circle me-2"></i> <span id="csvErrorMessage"></span>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Preview and Edit Data -->
+                <div class="step-2 d-none">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5>Preview Data</h5>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="addRowBtn">
+                                <i class="fas fa-plus me-1"></i> Add Row
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="backToUploadBtn">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered" id="csvPreviewTable">
+                            <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Middle Name</th>
+                                    <th>Email</th>
+                                    <th>Contact</th>
+                                    <th>School ID</th>
+                                    <th>Course</th>
+                                    <th>Year</th>
+                                    <th>Section</th>
+                                    <th>Semester</th>
+                                    <th>Term</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="csvPreviewBody">
+                                <!-- Preview data will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="confirmImportCheck">
+                            <label class="form-check-label" for="confirmImportCheck">
+                                I have reviewed the data and confirm it is correct
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-success" id="importCsvDataBtn" disabled>
+                            <i class="fas fa-file-import me-2"></i> Import Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!-- Step 1 footer -->
+                <div class="step-1 w-100 d-flex justify-content-between">
+                    <div>
+                        <small class="text-muted">Step 1 of 2: Upload CSV file</small>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+                <!-- Step 2 footer - hidden initially -->
+                <div class="step-2 w-100 d-flex justify-content-between d-none">
+                    <div>
+                        <small class="text-muted">Step 2 of 2: Review and import data</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Row Modal -->
+<div class="modal fade" id="addRowModal" tabindex="-1" aria-labelledby="addRowModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addRowModalLabel">Add New Row</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="new_first_name" class="form-label">First Name*</label>
+                        <input type="text" class="form-control" id="new_first_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="new_last_name" class="form-label">Last Name*</label>
+                        <input type="text" class="form-control" id="new_last_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="new_middle_name" class="form-label">Middle Name</label>
+                        <input type="text" class="form-control" id="new_middle_name">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="new_email" class="form-label">Email*</label>
+                        <input type="email" class="form-control" id="new_email" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="new_contact" class="form-label">Contact Number</label>
+                        <input type="text" class="form-control" id="new_contact">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="new_school_id" class="form-label">School ID*</label>
+                        <input type="text" class="form-control" id="new_school_id" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="new_course" class="form-label">Course*</label>
+                        <input type="text" class="form-control" id="new_course" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="new_year" class="form-label">Year*</label>
+                        <input type="text" class="form-control" id="new_year" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="new_section" class="form-label">Section*</label>
+                        <input type="text" class="form-control" id="new_section" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="new_semester" class="form-label">Semester</label>
+                        <select class="form-select" id="new_semester">
+                            <option value="1st_semester">1st Semester</option>
+                            <option value="2nd_semester">2nd Semester</option>
+                            <option value="summer">Summer</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="new_term" class="form-label">Term</label>
+                        <select class="form-select" id="new_term">
+                            <option value="midterm">Midterm</option>
+                            <option value="final">Final</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="addNewRowBtn">Add Row</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Row Modal -->
+<div class="modal fade" id="editRowModal" tabindex="-1" aria-labelledby="editRowModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editRowModalLabel">Edit Row</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit_row_index">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="csv_edit_first_name" class="form-label">First Name*</label>
+                        <input type="text" class="form-control" id="csv_edit_first_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="csv_edit_last_name" class="form-label">Last Name*</label>
+                        <input type="text" class="form-control" id="csv_edit_last_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="csv_edit_middle_name" class="form-label">Middle Name</label>
+                        <input type="text" class="form-control" id="csv_edit_middle_name">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="csv_edit_email" class="form-label">Email*</label>
+                        <input type="email" class="form-control" id="csv_edit_email" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="csv_edit_contact" class="form-label">Contact Number</label>
+                        <input type="text" class="form-control" id="csv_edit_contact">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="csv_edit_school_id" class="form-label">School ID*</label>
+                        <input type="text" class="form-control" id="csv_edit_school_id" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="csv_edit_course" class="form-label">Course*</label>
+                        <input type="text" class="form-control" id="csv_edit_course" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="csv_edit_year" class="form-label">Year*</label>
+                        <input type="text" class="form-control" id="csv_edit_year" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="csv_edit_section" class="form-label">Section*</label>
+                        <input type="text" class="form-control" id="csv_edit_section" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="csv_edit_semester" class="form-label">Semester</label>
+                        <select class="form-select" id="csv_edit_semester">
+                            <option value="1st_semester">1st Semester</option>
+                            <option value="2nd_semester">2nd Semester</option>
+                            <option value="summer">Summer</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="csv_edit_term" class="form-label">Term</label>
+                        <select class="form-select" id="csv_edit_term">
+                            <option value="midterm">Midterm</option>
+                            <option value="final">Final</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveRowChangesBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print QR Modal -->
+<div class="modal fade" id="printQrModal" tabindex="-1" aria-labelledby="printQrModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="printQrModalLabel">Print QR Codes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'dashboard:print_qr_batch' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Students to Print QR Codes</label>
+                        <div class="alert alert-info">
+                            <small>Use the filters above to narrow down the list of students, then select which students you want to print QR codes for.</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllStudents">
+                                <label class="form-check-label fw-bold" for="selectAllStudents">
+                                    Select All Visible Students
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div style="max-height: 300px; overflow-y: auto;" class="border p-2">
+                            {% for student in students %}
+                            <div class="form-check student-checkbox-container" data-course-id="{{ student.course.id }}" data-section-id="{{ student.year_section.id }}" data-semester="{{ student.semester }}" data-status="{{ student.clearance_status }}">
+                                <input class="form-check-input student-checkbox" type="checkbox" name="student_ids[]" value="{{ student.id }}" id="student_{{ student.id }}">
+                                <label class="form-check-label" for="student_{{ student.id }}">
+                                    {{ student.last_name }}, {{ student.first_name }} ({{ student.school_id }})
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Print Selected QR Codes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all modals
+        const modals = document.querySelectorAll('.modal');
+        if (modals.length > 0) {
+            modals.forEach(modalEl => {
+                try {
+                    new bootstrap.Modal(modalEl);
+                } catch (error) {
+                    console.error('Error initializing modal:', error);
+                }
+            });
+        }
+        
+        // Filter and search functionality
+        const courseFilter = document.getElementById('courseFilter');
+        const yearSectionFilter = document.getElementById('yearSectionFilter');
+        const semesterFilter = document.getElementById('semesterFilter');
+        const termFilter = document.getElementById('termFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const searchInput = document.getElementById('searchInput');
+        const studentsTable = document.getElementById('studentsTable');
+        const studentCount = document.getElementById('studentCount');
+        const rows = studentsTable ? studentsTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr') : [];
+        
+        // Initial population of year-section dropdown if course is already selected
+        if (courseFilter && yearSectionFilter) {
+            const initialCourseId = courseFilter.value;
+            if (initialCourseId) {
+                console.log('Initial course selected:', initialCourseId);
+                // Clear existing options
+                yearSectionFilter.innerHTML = '<option value="">All Sections</option>';
+                
+                // Add sections for the selected course
+                {% for section in sections %}
+                if (String("{{ section.course.id }}") == String(initialCourseId)) {
+                    yearSectionFilter.innerHTML += '<option value="{{ section.id }}">{{ section.year }} - {{ section.section }}</option>';
+                }
+                {% endfor %}
+            }
+        }
+        
+        // Populate year-section dropdown based on course selection
+        if (courseFilter && yearSectionFilter) {
+            courseFilter.addEventListener('change', function() {
+                const courseId = this.value;
+                console.log('Course selected:', courseId);
+                
+                // Clear existing options
+                yearSectionFilter.innerHTML = '<option value="">All Sections</option>';
+                
+                if (courseId) {
+                    console.log('Populating sections for course ID:', courseId);
+                    // Add sections for the selected course
+                    {% for section in sections %}
+                    console.log('Checking section with course ID: {{ section.course.id }}');
+                    if (String("{{ section.course.id }}") == String(courseId)) {
+                        console.log('Match found! Adding section: {{ section.year }} - {{ section.section }}');
+                        yearSectionFilter.innerHTML += '<option value="{{ section.id }}">{{ section.year }} - {{ section.section }}</option>';
+                    }
+                    {% endfor %}
+                }
+                
+                if (typeof filterTable === 'function') {
+                    filterTable();
+                }
+            });
+        }
+        
+        // Course dropdown change in Add Student modal
+        const courseDropdown = document.getElementById('course');
+        const sectionDropdown = document.getElementById('year_section');
+        
+        if (courseDropdown && sectionDropdown) {
+            courseDropdown.addEventListener('change', function() {
+                const courseId = this.value;
+                console.log('Add modal - Course selected:', courseId);
+                
+                // Clear existing options
+                sectionDropdown.innerHTML = '<option value="">Select Year & Section</option>';
+                
+                if (courseId) {
+                    // Add sections for the selected course
+                    {% for section in sections %}
+                    if (String("{{ section.course.id }}") == String(courseId)) {
+                        sectionDropdown.innerHTML += '<option value="{{ section.id }}">{{ section.year }} - {{ section.section }}</option>';
+                    }
+                    {% endfor %}
+                }
+            });
+        }
+        
+        // Course dropdown change in Edit Student modal
+        const editCourseDropdown = document.getElementById('edit_course');
+        const editSectionDropdown = document.getElementById('edit_year_section');
+        
+        if (editCourseDropdown && editSectionDropdown) {
+            editCourseDropdown.addEventListener('change', function() {
+                const courseId = this.value;
+                console.log('Edit modal - Course selected:', courseId);
+                
+                // Clear existing options
+                editSectionDropdown.innerHTML = '<option value="">Select Year & Section</option>';
+                
+                if (courseId) {
+                    // Add sections for the selected course
+                    {% for section in sections %}
+                    if (String("{{ section.course.id }}") == String(courseId)) {
+                        editSectionDropdown.innerHTML += '<option value="{{ section.id }}">{{ section.year }} - {{ section.section }}</option>';
+                    }
+                    {% endfor %}
+                }
+            });
+        }
+        
+        // Filter table based on all filters
+        function filterTable() {
+            if (!rows || rows.length === 0) return;
+            
+            const selectedCourseId = courseFilter.value;
+            const selectedSectionId = yearSectionFilter.value;
+            const selectedSemester = semesterFilter.value;
+            const selectedTerm = termFilter.value;
+            const selectedStatus = statusFilter.value;
+            const searchTerm = searchInput.value.toLowerCase();
+            let visibleCount = 0;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const courseId = rows[i].getAttribute('data-course-id');
+                const sectionId = rows[i].getAttribute('data-section-id');
+                const semester = rows[i].getAttribute('data-semester');
+                const term = rows[i].getAttribute('data-term');
+                const status = rows[i].getAttribute('data-status');
+                const cells = rows[i].getElementsByTagName('td');
+                
+                let matchesCourse = true;
+                let matchesSection = true;
+                let matchesSemester = true;
+                let matchesTerm = true;
+                let matchesStatus = true;
+                let matchesSearch = false;
+                
+                if (selectedCourseId && courseId !== selectedCourseId) {
+                    matchesCourse = false;
+                }
+                
+                if (selectedSectionId && sectionId !== selectedSectionId) {
+                    matchesSection = false;
+                }
+                
+                if (selectedSemester && semester !== selectedSemester) {
+                    matchesSemester = false;
+                }
+                
+                if (selectedTerm && term !== selectedTerm) {
+                    matchesTerm = false;
+                }
+                
+                if (selectedStatus && status !== selectedStatus) {
+                    matchesStatus = false;
+                }
+                
+                if (searchTerm) {
+                    for (let j = 0; j < cells.length - 2; j++) {
+                        if (cells[j].textContent.toLowerCase().indexOf(searchTerm) > -1) {
+                            matchesSearch = true;
+                            break;
+                        }
+                    }
+                } else {
+                    matchesSearch = true;
+                }
+                
+                const isVisible = matchesCourse && matchesSection && matchesSemester && matchesTerm && matchesStatus && matchesSearch;
+                rows[i].style.display = isVisible ? '' : 'none';
+                
+                if (isVisible) {
+                    visibleCount++;
+                }
+            }
+            
+            // Update student count
+            if (studentCount) {
+                studentCount.textContent = visibleCount + ' Students';
+            }
+        }
+        
+        // Attach event listeners for filtering
+        if (courseFilter && yearSectionFilter && semesterFilter && termFilter && statusFilter && searchInput) {
+            courseFilter.addEventListener('change', filterTable);
+            yearSectionFilter.addEventListener('change', filterTable);
+            semesterFilter.addEventListener('change', filterTable);
+            termFilter.addEventListener('change', filterTable);
+            statusFilter.addEventListener('change', filterTable);
+            searchInput.addEventListener('keyup', filterTable);
+        }
+        
+        // View QR code
+        const viewQrButtons = document.querySelectorAll('.view-qr');
+        const qrStudentName = document.getElementById('qrStudentName');
+        const qrStudentId = document.getElementById('qrStudentId');
+        const qrStudentDepartment = document.getElementById('qrStudentDepartment');
+        const qrStudentCourseYearSection = document.getElementById('qrStudentCourseYearSection');
+        const qrUuidToken = document.getElementById('qrUuidToken');
+        const qrImage = document.getElementById('qrImage');
+        const studentIdForQr = document.getElementById('student_id_for_qr');
+        
+        if (viewQrButtons.length > 0 && qrStudentName && qrImage) {
+            viewQrButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const studentName = this.getAttribute('data-name');
+                    const qrUrl = this.getAttribute('data-qr');
+                    const schoolId = this.getAttribute('data-school-id');
+                    const department = this.getAttribute('data-department');
+                    const course = this.getAttribute('data-course');
+                    const yearSection = this.getAttribute('data-year-section');
+                    const token = this.getAttribute('data-token');
+                    
+                    // Set values in modal
+                    qrStudentName.textContent = studentName;
+                    qrStudentId.textContent = schoolId;
+                    qrStudentDepartment.textContent = department;
+                    qrStudentCourseYearSection.textContent = course + ' | ' + yearSection;
+                    qrUuidToken.textContent = token;
+                    qrImage.src = qrUrl;
+                    
+                    // Store student ID for print button
+                    if (studentIdForQr) {
+                        studentIdForQr.value = studentId;
+                    }
+                });
+            });
+        }
+        
+        // View clearance button
+        const viewClearanceButtons = document.querySelectorAll('.view-clearance');
+        
+        if (viewClearanceButtons.length > 0) {
+            viewClearanceButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const token = this.getAttribute('data-token');
+                    window.location.href = '/clearance/' + token + '/';
+                });
+            });
+        }
+               
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        if (tooltipTriggerList.length > 0 && typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+        
+        // Edit student modal data
+        const editButtons = document.querySelectorAll('.edit-student');
+        
+        if (editButtons.length > 0 && editCourseDropdown && editSectionDropdown) {
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const schoolId = this.getAttribute('data-school-id');
+                    const email = this.getAttribute('data-email');
+                    const firstName = this.getAttribute('data-first-name');
+                    const middleName = this.getAttribute('data-middle-name');
+                    const lastName = this.getAttribute('data-last-name');
+                    const contact = this.getAttribute('data-contact');
+                    const semester = this.getAttribute('data-semester');
+                    const term = this.getAttribute('data-term');
+                    const courseId = this.getAttribute('data-course');
+                    const sectionId = this.getAttribute('data-section');
+                    
+                    document.getElementById('edit_student_id').value = studentId;
+                    document.getElementById('edit_school_id').value = schoolId;
+                    document.getElementById('edit_email').value = email;
+                    document.getElementById('edit_first_name').value = firstName;
+                    document.getElementById('edit_middle_name').value = middleName;
+                    document.getElementById('edit_last_name').value = lastName;
+                    document.getElementById('edit_contact_number').value = contact;
+                    document.getElementById('edit_semester').value = semester;
+                    document.getElementById('edit_term').value = term;
+                    document.getElementById('edit_course').value = courseId;
+                    
+                    // Populate year-section dropdown
+                    const editYearSection = document.getElementById('edit_year_section');
+                    editYearSection.innerHTML = '<option value="">Select Year & Section</option>';
+                    
+                    // Add sections for the selected course
+                    {% for section in sections %}
+                    if (String("{{ section.course.id }}") == String(courseId)) {
+                        const selected = String("{{ section.id }}") == String(sectionId) ? "selected" : "";
+                        editYearSection.innerHTML += '<option value="{{ section.id }}" ' + selected + '>{{ section.year }} - {{ section.section }}</option>';
+                    }
+                    {% endfor %}
+                });
+            });
+        }
+        
+        // Delete student modal data
+        const deleteButtons = document.querySelectorAll('.delete-student');
+        
+        if (deleteButtons.length > 0) {
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-id');
+                    const studentName = this.getAttribute('data-name');
+                    
+                    document.getElementById('delete_student_id').value = studentId;
+                    document.getElementById('delete_student_name').textContent = studentName;
+                });
+            });
+        }
+
+        // Handle Select All checkbox for QR code printing
+        const selectAllCheckbox = document.getElementById('selectAllStudents');
+        const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+        const studentCheckboxContainers = document.querySelectorAll('.student-checkbox-container');
+
+        if (selectAllCheckbox && studentCheckboxes.length > 0) {
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                
+                // Only select checkboxes in visible containers
+                studentCheckboxContainers.forEach(container => {
+                    if (container.style.display !== 'none') {
+                        const checkbox = container.querySelector('.student-checkbox');
+                        if (checkbox) {
+                            checkbox.checked = isChecked;
+                        }
+                    }
+                });
+            });
+        }
+
+        // CSV Import Preview Functionality
+        let csvData = [];
+        const requiredHeaders = ['first_name', 'last_name', 'email', 'school_id', 'course', 'year', 'section'];
+        const expectedHeaders = ['first_name', 'last_name', 'middle_name', 'email', 'contact_number', 'school_id', 'course', 'year', 'section', 'semester'];
+        
+        // Import CSV file input
+        const csvFileInput = document.getElementById('csv_file');
+        const previewCsvBtn = document.getElementById('previewCsvBtn');
+        const csvErrorContainer = document.getElementById('csvErrorContainer');
+        const csvErrorMessage = document.getElementById('csvErrorMessage');
+        const csvPreviewBody = document.getElementById('csvPreviewBody');
+        const importCsvDataBtn = document.getElementById('importCsvDataBtn');
+        const confirmImportCheck = document.getElementById('confirmImportCheck');
+        const backToUploadBtn = document.getElementById('backToUploadBtn');
+        const addRowBtn = document.getElementById('addRowBtn');
+
+        // Step navigation
+        const step1Elements = document.querySelectorAll('.step-1');
+        const step2Elements = document.querySelectorAll('.step-2');
+
+        function showStep(step) {
+            if (step === 1) {
+                step1Elements.forEach(el => el.classList.remove('d-none'));
+                step2Elements.forEach(el => el.classList.add('d-none'));
+                document.querySelector('.modal-title').textContent = 'Import Students from CSV';
+            } else if (step === 2) {
+                step1Elements.forEach(el => el.classList.add('d-none'));
+                step2Elements.forEach(el => el.classList.remove('d-none'));
+                document.querySelector('.modal-title').textContent = 'Preview Students Data';
+            }
+        }
+
+        // Preview CSV button click
+        if (previewCsvBtn) {
+            previewCsvBtn.addEventListener('click', function() {
+                const file = csvFileInput.files[0];
+                
+                // Reset error container
+                csvErrorContainer.classList.add('d-none');
+                csvErrorMessage.textContent = '';
+                
+                if (!file) {
+                    showError('Please select a CSV file to import');
+                    return;
+                }
+                
+                // Check file extension
+                if (!file.name.endsWith('.csv')) {
+                    showError('Please upload a CSV file (.csv)');
+                    return;
+                }
+                
+                // Parse CSV file
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const csv = e.target.result;
+                        const lines = csv.split('\n');
+                        
+                        // Remove empty lines
+                        const nonEmptyLines = lines.filter(line => line.trim() !== '');
+                        
+                        if (nonEmptyLines.length < 2) {
+                            showError('CSV file is empty or has no data rows');
+                            return;
+                        }
+                        
+                        // Parse headers
+                        const headers = nonEmptyLines[0].split(',').map(h => h.trim().toLowerCase());
+                        console.log('Detected headers:', headers);
+                        
+                        // Validate headers
+                        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+                        if (missingHeaders.length > 0) {
+                            showError(`Missing required headers: ${missingHeaders.join(', ')}`);
+                            return;
+                        }
+                        
+                        // Parse data rows
+                        csvData = [];
+                        let parseErrors = [];
+                        
+                        for (let i = 1; i < nonEmptyLines.length; i++) {
+                            const row = {};
+                            const values = parseCSVLine(nonEmptyLines[i]);
+                            
+                            if (values.length !== headers.length) {
+                                parseErrors.push(`Row ${i} has ${values.length} columns but should have ${headers.length} columns`);
+                                continue;
+                            }
+                            
+                            headers.forEach((header, index) => {
+                                row[header] = values[index];
+                            });
+                            
+                            // Add default semester if missing
+                            if (!row.semester) {
+                                row.semester = 'regular';
+                            }
+                            
+                            // Check for required fields
+                            const missingFields = requiredHeaders.filter(field => !row[field] || row[field].trim() === '');
+                            if (missingFields.length > 0) {
+                                parseErrors.push(`Row ${i}: Missing values for required fields: ${missingFields.join(', ')}`);
+                                continue;
+                            }
+                            
+                            csvData.push(row);
+                        }
+                        
+                        if (parseErrors.length > 0) {
+                            if (csvData.length === 0) {
+                                // No valid rows
+                                showError(`No valid data rows found. Errors:<br>${parseErrors.slice(0, 5).join('<br>')}`);
+                                if (parseErrors.length > 5) {
+                                    csvErrorMessage.innerHTML += `<br>... and ${parseErrors.length - 5} more errors`;
+                                }
+                                return;
+                            } else {
+                                console.warn(`${parseErrors.length} rows had errors and were skipped:`, parseErrors);
+                            }
+                        }
+                        
+                        if (csvData.length === 0) {
+                            showError('No valid data rows found in CSV file');
+                            return;
+                        }
+                        
+                        console.log(`Successfully parsed ${csvData.length} rows from CSV`);
+                        
+                        // Display preview
+                        renderPreview();
+                        showStep(2);
+                        
+                    } catch (error) {
+                        console.error('Error parsing CSV:', error);
+                        showError('Error parsing CSV file: ' + error.message);
+                    }
+                };
+                
+                reader.onerror = function() {
+                    showError('Error reading the file');
+                };
+                
+                reader.readAsText(file);
+            });
+        }
+
+        // Parse CSV line handling quoted values
+        function parseCSVLine(line) {
+            const result = [];
+            let inQuotes = false;
+            let currentValue = '';
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"' && (i === 0 || line[i-1] !== '\\')) {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(currentValue.trim());
+                    currentValue = '';
+                } else {
+                    currentValue += char;
+                }
+            }
+            
+            // Push the last value
+            result.push(currentValue.trim());
+            
+            return result;
+        }
+
+        // Show error message
+        function showError(message) {
+            csvErrorContainer.classList.remove('d-none');
+            csvErrorMessage.innerHTML = message;
+        }
+
+        // Render CSV preview table
+        function renderPreview() {
+            if (!csvPreviewBody) return;
+            
+            csvPreviewBody.innerHTML = '';
+            
+            csvData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                
+                // Create cells for each column
+                tr.innerHTML = `
+                    <td>${escapeHtml(row.first_name || '')}</td>
+                    <td>${escapeHtml(row.last_name || '')}</td>
+                    <td>${escapeHtml(row.middle_name || '')}</td>
+                    <td>${escapeHtml(row.email || '')}</td>
+                    <td>${escapeHtml(row.contact_number || '')}</td>
+                    <td>${escapeHtml(row.school_id || '')}</td>
+                    <td>${escapeHtml(row.course || '')}</td>
+                    <td>${escapeHtml(row.year || '')}</td>
+                    <td>${escapeHtml(row.section || '')}</td>
+                    <td>${escapeHtml(row.semester || '')}</td>
+                    <td>${escapeHtml(row.term || '')}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-sm btn-outline-primary edit-row-btn" data-index="${index}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger delete-row-btn" data-index="${index}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                // Debug: log the course value for each row
+                console.log(`Row ${index} course:`, row.course);
+                csvPreviewBody.appendChild(tr);
+            });
+            
+            // Event listeners to edit and delete buttons
+            attachRowActionListeners();
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        // Attach event listeners to row action buttons
+        function attachRowActionListeners() {
+            const editButtons = document.querySelectorAll('.edit-row-btn');
+            const deleteButtons = document.querySelectorAll('.delete-row-btn');
+            
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    openEditRowModal(index);
+                });
+            });
+            
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    if (confirm('Are you sure you want to delete this row?')) {
+                        csvData.splice(index, 1);
+                        renderPreview();
+                    }
+                });
+            });
+        }
+
+        // Open edit row modal
+        function openEditRowModal(index) {
+            const row = csvData[index];
+            const editRowModal = new bootstrap.Modal(document.getElementById('editRowModal'));
+            
+            document.getElementById('edit_row_index').value = index;
+            document.getElementById('csv_edit_first_name').value = row.first_name || '';
+            document.getElementById('csv_edit_last_name').value = row.last_name || '';
+            document.getElementById('csv_edit_middle_name').value = row.middle_name || '';
+            document.getElementById('csv_edit_email').value = row.email || '';
+            document.getElementById('csv_edit_contact').value = row.contact_number || '';
+            document.getElementById('csv_edit_school_id').value = row.school_id || '';
+            document.getElementById('csv_edit_course').value = row.course || '';
+            document.getElementById('csv_edit_year').value = row.year || '';
+            document.getElementById('csv_edit_section').value = row.section || '';
+            document.getElementById('csv_edit_semester').value = row.semester || '1st_semester';
+            document.getElementById('csv_edit_term').value = row.term || 'midterm';
+            
+            console.log('Saving course:', row.course);
+            console.log('csvData after save:', csvData);
+            
+            editRowModal.show();
+        }
+
+        // Add Row button click
+        if (addRowBtn) {
+            addRowBtn.addEventListener('click', function() {
+                const addRowModal = new bootstrap.Modal(document.getElementById('addRowModal'));
+                
+                // Clear form
+                document.getElementById('new_first_name').value = '';
+                document.getElementById('new_last_name').value = '';
+                document.getElementById('new_middle_name').value = '';
+                document.getElementById('new_email').value = '';
+                document.getElementById('new_contact').value = '';
+                document.getElementById('new_school_id').value = '';
+                document.getElementById('new_course').value = '';
+                document.getElementById('new_year').value = '';
+                document.getElementById('new_section').value = '';
+                document.getElementById('new_semester').value = 'regular';
+                
+                addRowModal.show();
+            });
+        }
+
+        // Add new row button click
+        const addNewRowBtn = document.getElementById('addNewRowBtn');
+        if (addNewRowBtn) {
+            addNewRowBtn.addEventListener('click', function() {
+                const first_name = document.getElementById('new_first_name').value.trim();
+                const last_name = document.getElementById('new_last_name').value.trim();
+                const email = document.getElementById('new_email').value.trim();
+                const school_id = document.getElementById('new_school_id').value.trim();
+                const course = document.getElementById('new_course').value.trim();
+                const year = document.getElementById('new_year').value.trim();
+                const section = document.getElementById('new_section').value.trim();
+                
+                // Validate required fields
+                const missingFields = [];
+                if (!first_name) missingFields.push('First Name');
+                if (!last_name) missingFields.push('Last Name');
+                if (!email) missingFields.push('Email');
+                if (!school_id) missingFields.push('School ID');
+                if (!course) missingFields.push('Course');
+                if (!year) missingFields.push('Year');
+                if (!section) missingFields.push('Section');
+                
+                if (missingFields.length > 0) {
+                    alert('Please fill in all required fields: ' + missingFields.join(', '));
+                    return;
+                }
+                
+                // Validate email format
+                if (email && !isValidEmail(email)) {
+                    alert('Please enter a valid email address');
+                    return;
+                }
+                
+                // Create new row
+                const newRow = {
+                    first_name: first_name,
+                    last_name: last_name,
+                    middle_name: document.getElementById('new_middle_name').value.trim(),
+                    email: email,
+                    contact_number: document.getElementById('new_contact').value.trim(),
+                    school_id: school_id,
+                    course: course,
+                    year: year,
+                    section: section,
+                    semester: document.getElementById('new_semester').value,
+                    term: document.getElementById('new_term').value
+                };
+                
+                // Check for duplicates
+                const isDuplicate = csvData.some(row => row.school_id === school_id);
+                if (isDuplicate) {
+                    if (!confirm(`A student with ID ${school_id} already exists in the import list. Add anyway?`)) {
+                        return;
+                    }
+                }
+                
+                // Add to data
+                csvData.push(newRow);
+                
+                // Update preview
+                renderPreview();
+                
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('addRowModal')).hide();
+            });
+        }
+
+        // Save row changes button click
+        const saveRowChangesBtn = document.getElementById('saveRowChangesBtn');
+        if (saveRowChangesBtn) {
+            saveRowChangesBtn.addEventListener('click', function() {
+                const index = parseInt(document.getElementById('edit_row_index').value);
+                const course = document.getElementById('csv_edit_course').value.trim();
+                const first_name = document.getElementById('csv_edit_first_name').value.trim();
+                const last_name = document.getElementById('csv_edit_last_name').value.trim();
+                const email = document.getElementById('csv_edit_email').value.trim();
+                const school_id = document.getElementById('csv_edit_school_id').value.trim();
+                const year = document.getElementById('csv_edit_year').value.trim();
+                const section = document.getElementById('csv_edit_section').value.trim();
+                
+                // Validate required fields
+                const missingFields = [];
+                if (!first_name) missingFields.push('First Name');
+                if (!last_name) missingFields.push('Last Name');
+                if (!email) missingFields.push('Email');
+                if (!school_id) missingFields.push('School ID');
+                if (!course) missingFields.push('Course');
+                if (!year) missingFields.push('Year');
+                if (!section) missingFields.push('Section');
+                
+                if (missingFields.length > 0) {
+                    alert('Please fill in all required fields: ' + missingFields.join(', '));
+                    return;
+                }
+                
+                // Validate email format
+                if (email && !isValidEmail(email)) {
+                    alert('Please enter a valid email address');
+                    return;
+                }
+                
+                // Check for duplicates (excluding current row)
+                const originalSchoolId = csvData[index].school_id;
+                if (school_id !== originalSchoolId) {
+                    const isDuplicate = csvData.some((row, i) => i !== index && row.school_id === school_id);
+                    if (isDuplicate) {
+                        if (!confirm(`A student with ID ${school_id} already exists in the import list. Update anyway?`)) {
+                            return;
+                        }
+                    }
+                }
+                
+                // Update row
+                csvData[index] = {
+                    first_name: first_name,
+                    last_name: last_name,
+                    middle_name: document.getElementById('csv_edit_middle_name').value.trim(),
+                    email: email,
+                    contact_number: document.getElementById('csv_edit_contact').value.trim(),
+                    school_id: school_id,
+                    course: course,
+                    year: year,
+                    section: section,
+                    semester: document.getElementById('csv_edit_semester').value,
+                    term: document.getElementById('csv_edit_term').value
+                };
+                
+                // Update preview
+                renderPreview();
+                
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('editRowModal')).hide();
+            });
+        }
+
+        // Back to upload button click
+        if (backToUploadBtn) {
+            backToUploadBtn.addEventListener('click', function() {
+                showStep(1);
+            });
+        }
+
+        // Confirm import checkbox change
+        if (confirmImportCheck && importCsvDataBtn) {
+            confirmImportCheck.addEventListener('change', function() {
+                importCsvDataBtn.disabled = !this.checked;
+            });
+        }
+
+        // Import CSV data button click
+        if (importCsvDataBtn) {
+            importCsvDataBtn.addEventListener('click', function() {
+                if (csvData.length === 0) {
+                    alert('No data to import');
+                    return;
+                }
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('action', 'import_preview');
+                const jsonData = JSON.stringify(csvData);
+                formData.append('data', jsonData);
+                
+                // Debug log
+                console.log('Sending data to server:', csvData);
+                
+                // Disable button and show loading state
+                importCsvDataBtn.disabled = true;
+                importCsvDataBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Importing...';
+                
+                // AJAX request
+                fetch('{% url "dashboard:import_students" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json().catch(error => {
+                        console.error('Error parsing JSON response:', error);
+                        throw new Error('Failed to parse server response');
+                    });
+                })
+                .then(data => {
+                    if (data.success) {
+                        if (data.success_count > 0) {
+                            alert(`Successfully imported ${data.success_count} students`);
+                            // Close modal and reload page
+                            bootstrap.Modal.getInstance(document.getElementById('importCsvModal')).hide();
+                            window.location.reload();
+                        } else {
+                            if (data.error_count > 0) {
+                                let errorMsg = `Failed to import any students. ${data.error_count} errors occurred:`;
+                                if (data.errors && data.errors.length) {
+                                    errorMsg += '\n• ' + data.errors.join('\n• ');
+                                }
+                                alert(errorMsg);
+                            } else {
+                                alert('No students were imported. Please check your data and try again.');
+                            }
+                            importCsvDataBtn.disabled = false;
+                            importCsvDataBtn.innerHTML = '<i class="fas fa-file-import me-2"></i> Import Data';
+                        }
+                    } else {
+                        alert('Error importing students: ' + (data.error || 'Unknown error'));
+                        importCsvDataBtn.disabled = false;
+                        importCsvDataBtn.innerHTML = '<i class="fas fa-file-import me-2"></i> Import Data';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error importing students: ' + error.message);
+                    importCsvDataBtn.disabled = false;
+                    importCsvDataBtn.innerHTML = '<i class="fas fa-file-import me-2"></i> Import Data';
+                });
+            });
+        }
+
+        // Function to validate email
+        function isValidEmail(email) {
+            const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            return re.test(String(email).toLowerCase());
+        }
+    });
+</script>
+{% endblock %} 

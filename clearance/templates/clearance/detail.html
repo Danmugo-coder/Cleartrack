@@ -1,0 +1,611 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Clearance Details - {{ student.school_id }} - ClearTrack{% endblock %}
+
+{% block page_title %}Clearance Form{% endblock %}
+
+{% block extra_css %}
+<style>
+    .clearance-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .clearance-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+    
+    .clearance-card:hover {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+    
+    .clearance-header {
+        background-color: #f8f9fa;
+        padding: 25px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .school-logo {
+        max-height: 100px;
+        transition: all 0.3s;
+    }
+    
+    .school-name {
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: #212529;
+    }
+    
+    .school-location {
+        font-size: 1rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    
+    .form-title {
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        margin-top: 15px;
+        color: #4361ee;
+    }
+    
+    .qr-container {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    
+    .qr-code {
+        border: 5px solid white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        max-width: 100px;
+        max-height: 100px;
+        overflow: hidden;
+    }
+    
+    .student-info {
+        background-color: white;
+        border: none !important;
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+    }
+    
+    .info-label {
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .form-control-plaintext {
+        font-weight: 600;
+        color: #212529;
+        border-bottom: 1px dashed rgba(0, 0, 0, 0.1) !important;
+        padding-bottom: 5px;
+    }
+    
+    .clearance-fields {
+        margin-bottom: 30px;
+    }
+    
+    .clearance-table {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .clearance-table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        color: #495057;
+    }
+    
+    .clearance-table td {
+        vertical-align: middle;
+        padding: 15px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .clearance-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.8rem;
+        display: inline-block;
+    }
+    
+    .status-badge.complete {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .status-badge.pending {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #fd7e14;
+    }
+    
+    .status-date {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .sign-btn {
+        padding: 8px 15px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.8rem;
+        transition: all 0.3s;
+    }
+    
+    .sign-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .signature-img {
+        max-height: 40px;
+        border-radius: 5px;
+        transition: all 0.3s;
+    }
+    
+    .signature-img:hover {
+        transform: scale(1.1);
+    }
+    
+    .signature-placeholder {
+        height: 40px;
+        border: 1px dashed rgba(0, 0, 0, 0.1) !important;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+    
+    .clearance-status {
+        background-color: #f8f9fa;
+        border: none !important;
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+    }
+    
+    .progress {
+        height: 10px;
+        border-radius: 5px;
+        background-color: rgba(0, 0, 0, 0.05);
+        margin-top: 5px;
+    }
+    
+    .progress-bar {
+        border-radius: 5px;
+        font-size: 0.7rem;
+        line-height: 10px;
+    }
+    
+    .approval-section {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .signature-line {
+        width: 80%;
+        margin: 10px auto 0;
+        border-top: 1px solid rgba(0, 0, 0, 0.2);
+        padding-top: 5px;
+    }
+    
+    .signature-title {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0;
+    }
+    
+    .notes {
+        margin: 30px 0;
+    }
+    
+    .alert {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .official-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+    
+    .footer-school {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .footer-system {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+    
+    .footer-id {
+        color: #adb5bd;
+        font-size: 0.8rem;
+    }
+    
+    .print-btn {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s;
+        z-index: 1;
+    }
+    
+    .print-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+        z-index: -1;
+    }
+    
+    .print-btn:hover::before {
+        width: 100%;
+    }
+    
+    @media print {
+        .btn, .navbar, .sidebar, footer, .page-title-area {
+            display: none !important;
+        }
+        
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        .card-header {
+            background: none !important;
+            border: none !important;
+        }
+        
+        .main-content {
+            padding: 0 !important;
+        }
+        
+        body {
+            background: white !important;
+        }
+        
+        .content-wrapper {
+            margin-left: 0 !important;
+        }
+        
+        .container-fluid {
+            padding: 0 !important;
+        }
+        
+        .clearance-container {
+            max-width: 100% !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="clearance-container">
+    <div class="card clearance-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Student Clearance Form</h5>
+            <button class="btn btn-outline-primary print-btn" onclick="window.print()">
+                <i class="fas fa-print me-2"></i> Print Form
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- Clearance Form Header -->
+            <div class="clearance-header mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center mb-3 mb-md-0">
+                        <img src="/static/images/logo.jpeg" alt="School Logo" class="school-logo">
+                    </div>
+                    <div class="col-md-8 text-center mb-3 mb-md-0">
+                        <h5 class="mb-1">Republic of the Philippines</h5>
+                        <h4 class="school-name">DR. EMILIO B. ESPINOSA SR., MEMORIAL STATE COLLEGE OF AGRICULTURE AND TECHNOLOGY</h4>
+                        <p class="school-location">Cabitan, Mandaon, Masbate | www.debesmscat.edu.ph</p>
+                        <h3 class="form-title">CLEARANCE FOR ENROLLMENT</h3>
+                    </div>
+                    <div class="col-md-2 qr-container mb-3 mb-md-0">
+                        <div class="qr-code">
+                            <img src="{{ student.qr_code.url }}" alt="QR Code" class="img-fluid">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Student Information -->
+            <div class="student-info mb-4 p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3 row">
+                            <label class="col-sm-3 info-label">Name:</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control-plaintext" value="{{ student.first_name }} {{ student.middle_name|default:'' }} {{ student.last_name }}" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-3 info-label">Course:</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control-plaintext" value="{{ student.course.name }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3 row">
+                            <label class="col-sm-3 info-label">Student ID:</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control-plaintext" value="{{ student.school_id }}" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-3 info-label">Section:</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control-plaintext" value="{{ student.year_section.year }} - {{ student.year_section.section }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-0 row">
+                            <label class="col-sm-3 info-label">Semester:</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control-plaintext" value="{{ student.get_semester_display }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-0 row">
+                            <label class="col-sm-3 info-label">Date:</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control-plaintext" value="{{ clearance_form.created_at|date:'F d, Y' }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Clearance Fields -->
+            <div class="clearance-fields">
+                <div class="table-responsive">
+                    <table class="table clearance-table">
+                        <thead>
+                            <tr>
+                                <th width="30%">Department/Office</th>
+                                <th width="30%">Authorized Signatory</th>
+                                <th width="20%">Status</th>
+                                <th width="20%">Signature</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% comment %}Display non-landlord fields normally{% endcomment %}
+                            {% for field in clearance_form.fields.all %}
+                                {% if "landlord" not in field.name|lower and "landlady" not in field.name|lower %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ field.name }}</strong>
+                                        </td>
+                                        <td>
+                                            {{ field.assigned_to.get_full_name|default:field.assigned_to.username }}
+                                        </td>
+                                        <td>
+                                            {% if field.status %}
+                                                <div class="status-badge complete">
+                                                    <i class="fas fa-check-circle me-1"></i> Signed
+                                                </div>
+                                                <div class="status-date">
+                                                    {{ field.signed_at|date:"M d, Y" }}
+                                                </div>
+                                            {% else %}
+                                                <div class="status-badge pending">
+                                                    <i class="fas fa-clock me-1"></i> Pending
+                                                </div>
+                                                {% if field.assigned_to == user and not field.status %}
+                                                    <form method="post" action="{% url 'clearance:sign_clearance' field.id %}" class="mt-2">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-primary sign-btn">
+                                                            <i class="fas fa-signature me-1"></i> Sign Now
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if field.signature %}
+                                                <img src="{{ field.signature.url }}" alt="Signature" class="signature-img">
+                                                <div class="mt-2 text-center">
+                                                    <small class="text-muted">{{ field.signed_by_name|default:field.assigned_to.get_full_name|default:field.assigned_to.username }}</small>
+                                                </div>
+                                            {% else %}
+                                                <div class="signature-placeholder"></div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% comment %}Display only first landlord field{% endcomment %}
+                            {% with landlord_fields=clearance_form.fields.all|dictsortreversed:"name"|dictsort:"name" %}
+                                {% for field in landlord_fields %}
+                                    {% if "landlord" in field.name|lower or "landlady" in field.name|lower %}
+                                        {% if forloop.first %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ field.name }}</strong>
+                                                </td>
+                                                <td>
+                                                    <strong>BH Landlord/Landlady</strong>
+                                                    <small class="d-block text-muted">(Boarding house landlord/landlady sign)</small>
+                                                </td>
+                                                <td>
+                                                    {% if field.status %}
+                                                        <div class="status-badge complete">
+                                                            <i class="fas fa-check-circle me-1"></i> Signed
+                                                        </div>
+                                                        <div class="status-date">
+                                                            {{ field.signed_at|date:"M d, Y" }}
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="status-badge pending">
+                                                            <i class="fas fa-clock me-1"></i> Pending
+                                                        </div>
+                                                        {% if field.assigned_to == user and not field.status %}
+                                                            <form method="post" action="{% url 'clearance:sign_clearance' field.id %}" class="mt-2">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-primary sign-btn">
+                                                                    <i class="fas fa-signature me-1"></i> Sign Now
+                                                                </button>
+                                                            </form>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if field.signature %}
+                                                        <img src="{{ field.signature.url }}" alt="Signature" class="signature-img">
+                                                        <div class="mt-2 text-center">
+                                                            <small class="text-muted">{{ field.signed_by_name|default:field.assigned_to.get_full_name|default:field.assigned_to.username }}</small>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="signature-placeholder"></div>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endwith %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Clearance Status -->
+            <div class="clearance-status p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="mb-md-0 mb-3 row">
+                            <label class="col-sm-4 info-label">Clearance Status:</label>
+                            <div class="col-sm-8">
+                                {% if clearance_form.status == 'complete' %}
+                                    <div class="status-badge complete">
+                                        <i class="fas fa-check-circle me-1"></i> COMPLETE
+                                    </div>
+                                {% else %}
+                                    <div class="status-badge pending">
+                                        <i class="fas fa-exclamation-circle me-1"></i> INCOMPLETE
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row">
+                            <label class="col-sm-4 info-label">Completion:</label>
+                            <div class="col-sm-8">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>{{ clearance_form.signed_fields }}/{{ clearance_form.total_fields }} Fields</small>
+                                    <small>{{ clearance_form.progress_percentage }}%</small>
+                                </div>
+                                <div class="progress">
+                                    {% if clearance_form.status == 'complete' %}
+                                        <div class="progress-bar bg-success" role="progressbar" 
+                                            style="width: {{ clearance_form.progress_percentage }}%;" 
+                                            aria-valuenow="{{ clearance_form.signed_fields }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="{{ clearance_form.total_fields }}">
+                                        </div>
+                                    {% else %}
+                                        <div class="progress-bar bg-warning" role="progressbar" 
+                                            style="width: {{ clearance_form.progress_percentage }}%;" 
+                                            aria-valuenow="{{ clearance_form.signed_fields }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="{{ clearance_form.total_fields }}">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Approval Section -->
+            <div class="approval-section">
+                <div class="row">
+                    <div class="col-md-6 text-center mb-4">
+                        {% if approval_registrar %}
+                            <div class="text-center mb-2">
+                                <img src="{{ approval_registrar.signature.url }}" alt="Registrar Signature" class="signature-img">
+                                <div class="mt-2">
+                                    <small class="text-muted">{{ approval_registrar.signed_by_name|default:approval_registrar.signed_by.get_full_name|default:approval_registrar.signed_by.username }}</small>
+                                </div>
+                                <div class="status-date">{{ approval_registrar.signed_at|date:"M d, Y" }}</div>
+                            </div>
+                        {% else %}
+                            <div class="signature-placeholder mx-auto mb-2" style="width: 120px;"></div>
+                        {% endif %}
+                        <div class="signature-line">
+                            <p class="signature-title">College Registrar</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-center mb-4">
+                        {% if approval_dean %}
+                            <div class="text-center mb-2">
+                                <img src="{{ approval_dean.signature.url }}" alt="Dean Signature" class="signature-img">
+                                <div class="mt-2">
+                                    <small class="text-muted">{{ approval_dean.signed_by_name|default:approval_dean.signed_by.get_full_name|default:approval_dean.signed_by.username }}</small>
+                                </div>
+                                <div class="status-date">{{ approval_dean.signed_at|date:"M d, Y" }}</div>
+                            </div>
+                        {% else %}
+                            <div class="signature-placeholder mx-auto mb-2" style="width: 120px;"></div>
+                        {% endif %}
+                        <div class="signature-line">
+                            <p class="signature-title">Dean</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notes -->
+            <div class="notes">
+                <div class="alert {% if clearance_form.status == 'complete' %}alert-success{% else %}alert-warning{% endif %}">
+                    {% if clearance_form.status == 'complete' %}
+                        <i class="fas fa-check-circle me-2"></i> This clearance form is complete and has been approved.
+                    {% else %}
+                        <i class="fas fa-exclamation-circle me-2"></i> This clearance form is incomplete. All fields must be signed to complete the clearance.
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Official Footer -->
+            <div class="official-footer">
+                <p class="footer-school">DR. EMILIO B. ESPINOSA SR., MEMORIAL STATE COLLEGE OF AGRICULTURE AND TECHNOLOGY</p>
+                <p class="footer-system">This document is officially generated by ClearTrack System</p>
+                <p class="footer-id">Form ID: {{ clearance_form.id }} | Generated on: {{ clearance_form.created_at|date:"F d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

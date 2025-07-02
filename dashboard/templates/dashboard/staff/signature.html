@@ -1,0 +1,284 @@
+{% extends 'core/base.html' %}
+
+{% block title %}My Signature - ClearTrack{% endblock %}
+
+{% block page_title %}My Signature{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-signature me-2 text-primary"></i>
+                    <h5 class="mb-0">Digital Signature</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3" id="signatureTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="draw-tab" data-bs-toggle="tab" data-bs-target="#draw-tab-pane" type="button" role="tab" aria-controls="draw-tab-pane" aria-selected="true">
+                            <i class="fas fa-pen me-2"></i> Draw Signature
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-tab-pane" type="button" role="tab" aria-controls="upload-tab-pane" aria-selected="false">
+                            <i class="fas fa-upload me-2"></i> Upload Signature
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="signatureTabsContent">
+                    <!-- Draw Signature Tab -->
+                    <div class="tab-pane fade show active" id="draw-tab-pane" role="tabpanel" aria-labelledby="draw-tab" tabindex="0">
+                        <div class="mb-3">
+                            <div class="border rounded p-3 bg-light">
+                                <canvas id="signatureCanvas" width="600" height="200" class="border border-secondary rounded w-100" style="touch-action: none;"></canvas>
+                            </div>
+                            <div class="d-flex justify-content-between mt-3">
+                                <div>
+                                    <button type="button" class="btn btn-outline-secondary" id="clearCanvas">
+                                        <i class="fas fa-eraser me-2"></i> Clear
+                                    </button>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-primary" id="saveDrawnSignature">
+                                        <i class="fas fa-save me-2"></i> Save Signature
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Upload Signature Tab -->
+                    <div class="tab-pane fade" id="upload-tab-pane" role="tabpanel" aria-labelledby="upload-tab" tabindex="0">
+                        <form id="uploadSignatureForm" method="post" action="{% url 'dashboard:staff_signature' %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="upload">
+                            
+                            <div class="mb-3">
+                                <label for="signatureImage" class="form-label">Upload Signature Image</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-file-image"></i></span>
+                                    <input type="file" class="form-control" id="signatureImage" name="signature" accept="image/png, image/jpeg, image/jpg" required>
+                                </div>
+                                <div class="form-text">Upload a clear image of your signature (PNG or JPG format)</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div id="imagePreviewContainer" class="text-center p-3 border rounded bg-light" style="display: none;">
+                                    <p class="mb-2"><i class="fas fa-eye me-1"></i> Preview:</p>
+                                    <img id="imagePreview" src="#" alt="Signature Preview" class="img-fluid border rounded shadow-sm" style="max-height: 150px;">
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i> Save Uploaded Signature
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2 text-primary"></i>
+                    <h5 class="mb-0">Current Signature</h5>
+                </div>
+            </div>
+            <div class="card-body text-center">
+                {% if user.profile.signature %}
+                    <div class="mb-3 p-3 border rounded bg-light">
+                        <img src="{{ user.profile.signature.url }}" alt="Your Signature" class="img-fluid border rounded shadow-sm" style="max-height: 150px;">
+                    </div>
+                    <p class="text-muted">
+                        <small><i class="fas fa-clock me-1"></i> Last updated: {{ user.profile.updated_at|date:"M d, Y H:i" }}</small>
+                    </p>
+                {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-signature text-muted" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="text-muted">No signature yet</h5>
+                        <p class="text-muted mb-0">Draw or upload your signature to get started</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-lightbulb me-2 text-primary"></i>
+                    <h5 class="mb-0">Tips for a Good Signature</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i> Sign clearly on a white background
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i> Use black or dark blue ink
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-2"></i> Make sure your signature is complete
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i> Avoid very thin or light signatures
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i> Don't include other elements in the image
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form for canvas submission -->
+<form id="canvasForm" method="post" action="{% url 'dashboard:staff_signature' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="draw">
+    <input type="hidden" name="signature_data" id="signatureData">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Drawing signature on canvas
+        const canvas = document.getElementById('signatureCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        
+        // Set canvas drawing style
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#000000';
+        
+        // Clear canvas and draw a background
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        // Initialize canvas with white background
+        clearCanvas();
+        
+        // Drawing event handlers
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = getCoordinates(e);
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            const [x, y] = getCoordinates(e);
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            
+            [lastX, lastY] = [x, y];
+        }
+        
+        function stopDrawing() {
+            isDrawing = false;
+        }
+        
+        // Get coordinates for both mouse and touch events
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            let x, y;
+            
+            if (e.type.includes('touch')) {
+                x = e.touches[0].clientX - rect.left;
+                y = e.touches[0].clientY - rect.top;
+            } else {
+                x = e.clientX - rect.left;
+                y = e.clientY - rect.top;
+            }
+            
+            // Scale coordinates if canvas display size differs from actual dimensions
+            x = x * (canvas.width / rect.width);
+            y = y * (canvas.height / rect.height);
+            
+            return [x, y];
+        }
+        
+        // Add event listeners for mouse
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        // Add event listeners for touch devices
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+        
+        // Clear button
+        document.getElementById('clearCanvas').addEventListener('click', clearCanvas);
+        
+        // Save drawn signature
+        document.getElementById('saveDrawnSignature').addEventListener('click', function() {
+            // Check if canvas is empty (all white)
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            let isEmpty = true;
+            
+            // Check if any non-white pixels exist
+            for (let i = 0; i < imageData.length; i += 4) {
+                // If any pixel is not white (255,255,255,255)
+                if (imageData[i] !== 255 || imageData[i + 1] !== 255 || imageData[i + 2] !== 255) {
+                    isEmpty = false;
+                    break;
+                }
+            }
+            
+            if (isEmpty) {
+                alert('Please draw your signature before saving.');
+                return;
+            }
+            
+            // Convert canvas to data URL and submit
+            const signatureData = canvas.toDataURL('image/png');
+            document.getElementById('signatureData').value = signatureData;
+            document.getElementById('canvasForm').submit();
+        });
+        
+        // Image upload preview
+        const signatureImage = document.getElementById('signatureImage');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        
+        signatureImage.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreviewContainer.style.display = 'block';
+                };
+                
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                imagePreviewContainer.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %} 

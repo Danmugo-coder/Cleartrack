@@ -1,0 +1,507 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Reports - ClearTrack{% endblock %}
+
+{% block page_title %}Reports{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'dashboard:export_data' 'reports' %}" class="btn btn-success" id="exportExcelBtn">
+        <i class="fas fa-file-excel me-2"></i> Export to Excel
+    </a>
+    <a href="{% url 'dashboard:export_pdf' %}" class="btn btn-danger" id="exportPdfBtn">
+        <i class="fas fa-file-pdf me-2"></i> Export to PDF
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Filter Reports</h5>
+            </div>
+            <div class="card-body">
+                <form id="reportFilterForm">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="staffFilter" class="form-label">Staff</label>
+                            <select class="form-select" id="staffFilter">
+                                <option value="">All Staff</option>
+                                {% for staff in staff_users %}
+                                <option value="{{ staff.id }}">{{ staff.get_full_name|default:staff.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="dateFilter" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="dateFilter">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="courseFilter" class="form-label">Course</label>
+                            <select class="form-select" id="courseFilter">
+                                <option value="">All Courses</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="submittedFilter" class="form-label">Status</label>
+                            <select class="form-select" id="submittedFilter">
+                                <option value="">All</option>
+                                <option value="true">Submitted</option>
+                                <option value="false">Not Submitted</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-primary" id="applyFilterBtn">
+                                <i class="fas fa-filter me-2"></i> Apply Filters
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="resetFilterBtn">
+                                <i class="fas fa-undo me-2"></i> Reset Filters
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">Daily Reports</h5>
+                    </div>
+                    <div class="col-auto">
+                        <span class="badge bg-primary" id="reportCount">{{ reports|length }} Reports</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="reportsTable">
+                        <thead>
+                            <tr>
+                                <th>Staff</th>
+                                <th>Date</th>
+                                <th>Students Signed</th>
+                                <th>Status</th>
+                                <th>Fields Signed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports %}
+                            <tr data-staff-id="{{ report.staff.id }}" data-course-ids="{{ report.student_courses|join:',' }}" data-submitted="{{ report.submitted|lower }}">
+                                <td>{{ report.staff.get_full_name|default:report.staff.username }}</td>
+                                <td>{{ report.date|date:"M d, Y" }}</td>
+                                <td>{{ report.entries|length }}</td>
+                                <td>
+                                    {% if report.submitted %}
+                                        <span class="badge bg-success">Submitted</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Not Submitted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with total_fields=report.total_fields %}
+                                    {% if total_fields > 0 %}
+                                        {{ total_fields }} fields
+                                    {% else %}
+                                        <span class="text-muted">No fields</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-primary view-report" data-bs-toggle="modal" data-bs-target="#viewReportModal" data-id="{{ report.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-info print-report" data-id="{{ report.id }}">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No reports found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Report Modal -->
+<div class="modal fade" id="viewReportModal" tabindex="-1" aria-labelledby="viewReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="viewReportModalLabel"><i class="fas fa-file-alt me-2"></i>Report Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-user me-2"></i>Staff:</strong> <span id="report_staff"></span></p>
+                                    <p><strong><i class="fas fa-calendar-alt me-2"></i>Date:</strong> <span id="report_date"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-info-circle me-2"></i>Status:</strong> <span id="report_status"></span></p>
+                                    <p><strong><i class="fas fa-clock me-2"></i>Submitted At:</strong> <span id="report_submitted_at"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6 class="mb-3"><i class="fas fa-users me-2"></i>Students Signed</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover" id="reportEntriesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Fields Signed</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportEntriesList">
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-primary" id="printModalReport">
+                    <i class="fas fa-print me-2"></i>Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality
+        const staffFilter = document.getElementById('staffFilter');
+        const dateFilter = document.getElementById('dateFilter');
+        const courseFilter = document.getElementById('courseFilter');
+        const submittedFilter = document.getElementById('submittedFilter');
+        const applyFilterBtn = document.getElementById('applyFilterBtn');
+        const resetFilterBtn = document.getElementById('resetFilterBtn');
+        const reportsTable = document.getElementById('reportsTable');
+        const reportCount = document.getElementById('reportCount');
+        
+        // Update the PDF export URL with current filters
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        
+        function updateExportPdfUrl() {
+            if (exportPdfBtn) {
+                let url = '{% url 'dashboard:export_pdf' %}';
+                const params = [];
+                
+                if (staffFilter && staffFilter.value) {
+                    params.push(`staff_id=${staffFilter.value}`);
+                }
+                
+                if (dateFilter && dateFilter.value) {
+                    params.push(`date=${dateFilter.value}`);
+                }
+                
+                if (courseFilter && courseFilter.value) {
+                    params.push(`course_id=${courseFilter.value}`);
+                }
+                
+                if (submittedFilter && submittedFilter.value) {
+                    params.push(`submitted=${submittedFilter.value}`);
+                }
+                
+                if (params.length > 0) {
+                    url += '?' + params.join('&');
+                }
+                
+                exportPdfBtn.href = url;
+            }
+        }
+        
+        // Apply filters
+        applyFilterBtn.addEventListener('click', function() {
+            filterTable();
+            updateExportPdfUrl();
+        });
+        
+        // Reset filters
+        resetFilterBtn.addEventListener('click', function() {
+            staffFilter.value = '';
+            dateFilter.value = '';
+            courseFilter.value = '';
+            submittedFilter.value = '';
+            filterTable();
+            updateExportPdfUrl();
+        });
+        
+        // Update export URL initially
+        updateExportPdfUrl();
+        
+        function filterTable() {
+            const selectedStaffId = staffFilter.value;
+            const selectedDate = dateFilter.value ? new Date(dateFilter.value) : null;
+            const selectedCourseId = courseFilter.value;
+            const selectedSubmitted = submittedFilter.value;
+            const rows = reportsTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            let visibleCount = 0;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const staffId = rows[i].getAttribute('data-staff-id');
+                const courseIds = rows[i].getAttribute('data-course-ids').split(',');
+                const submitted = rows[i].getAttribute('data-submitted');
+                const dateCell = rows[i].getElementsByTagName('td')[1].textContent;
+                
+                let matchesStaff = true;
+                let matchesDate = true;
+                let matchesCourse = true;
+                let matchesSubmitted = true;
+                
+                if (selectedStaffId && staffId !== selectedStaffId) {
+                    matchesStaff = false;
+                }
+                
+                if (selectedDate) {
+                    const rowDate = new Date(dateCell);
+                    matchesDate = rowDate.toDateString() === selectedDate.toDateString();
+                }
+                
+                if (selectedCourseId && !courseIds.includes(selectedCourseId)) {
+                    matchesCourse = false;
+                }
+                
+                if (selectedSubmitted && submitted !== selectedSubmitted) {
+                    matchesSubmitted = false;
+                }
+                
+                const isVisible = matchesStaff && matchesDate && matchesCourse && matchesSubmitted;
+                rows[i].style.display = isVisible ? '' : 'none';
+                
+                if (isVisible) {
+                    visibleCount++;
+                }
+            }
+            
+            // Update report count
+            reportCount.textContent = visibleCount + ' Reports';
+        }
+        
+        // View report modal
+        const viewReportButtons = document.querySelectorAll('.view-report');
+        
+        viewReportButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const reportId = this.getAttribute('data-id');
+                
+                // Clear previous data
+                document.getElementById('report_staff').textContent = 'Loading...';
+                document.getElementById('report_date').textContent = 'Loading...';
+                document.getElementById('report_status').textContent = 'Loading...';
+                document.getElementById('report_submitted_at').textContent = 'Loading...';
+                document.getElementById('reportEntriesList').innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
+                
+                // Fetch report details from API
+                fetch(`{% url 'dashboard:get_report_details' %}?id=${reportId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const report = data.report;
+                            document.getElementById('report_staff').textContent = report.staff;
+                            document.getElementById('report_date').textContent = report.date;
+                            document.getElementById('report_status').textContent = report.status;
+                            document.getElementById('report_submitted_at').textContent = report.submitted_at;
+                            
+                            let entriesHtml = '';
+                            if (report.entries.length > 0) {
+                                report.entries.forEach(entry => {
+                                    entriesHtml += `
+                                        <tr>
+                                            <td>${entry.id}</td>
+                                            <td>${entry.name}</td>
+                                            <td>${entry.fields.join(', ')}</td>
+                                            <td>${entry.time}</td>
+                                        </tr>
+                                    `;
+                                });
+                            } else {
+                                entriesHtml = '<tr><td colspan="4" class="text-center">No entries found</td></tr>';
+                            }
+                            
+                            document.getElementById('reportEntriesList').innerHTML = entriesHtml;
+                        } else {
+                            document.getElementById('reportEntriesList').innerHTML = 
+                                `<tr><td colspan="4" class="text-center text-danger">${data.error || 'Failed to load report data'}</td></tr>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching report details:', error);
+                        document.getElementById('reportEntriesList').innerHTML = 
+                            '<tr><td colspan="4" class="text-center text-danger">Error loading report data</td></tr>';
+                    });
+            });
+        });
+        
+        // Print report
+        const printReportButtons = document.querySelectorAll('.print-report');
+        
+        printReportButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const reportId = this.getAttribute('data-id');
+                const row = this.closest('tr');
+                const staff = row.getElementsByTagName('td')[0].textContent;
+                const date = row.getElementsByTagName('td')[1].textContent;
+                
+                // Fetch report data first
+                fetch(`{% url 'dashboard:get_report_details' %}?id=${reportId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            printReportWithData(data.report);
+                        } else {
+                            alert('Failed to load report data: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching report details:', error);
+                        alert('Error loading report data');
+                    });
+            });
+        });
+        
+        // Print modal report
+        const printModalReportButton = document.getElementById('printModalReport');
+        
+        printModalReportButton.addEventListener('click', function() {
+            const staff = document.getElementById('report_staff').textContent;
+            const date = document.getElementById('report_date').textContent;
+            const status = document.getElementById('report_status').textContent;
+            const submitted_at = document.getElementById('report_submitted_at').textContent;
+            
+            // Create report data object
+            const reportData = {
+                staff: staff,
+                date: date,
+                status: status,
+                submitted_at: submitted_at,
+                entries: []
+            };
+            
+            // Get entries from table
+            const rows = document.getElementById('reportEntriesList').getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                if (cells.length >= 4) {
+                    reportData.entries.push({
+                        id: cells[0].textContent,
+                        name: cells[1].textContent,
+                        fields: cells[2].textContent.split(', '),
+                        time: cells[3].textContent
+                    });
+                }
+            }
+            
+            printReportWithData(reportData);
+        });
+        
+        function printReportWithData(reportData) {
+            const printWindow = window.open('', '_blank');
+            
+            // Create table rows for entries
+            let entriesHtml = '';
+            if (reportData.entries && reportData.entries.length > 0) {
+                reportData.entries.forEach(entry => {
+                    entriesHtml += `
+                        <tr>
+                            <td>${entry.id}</td>
+                            <td>${entry.name}</td>
+                            <td>${Array.isArray(entry.fields) ? entry.fields.join(', ') : entry.fields}</td>
+                            <td>${entry.time}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                entriesHtml = '<tr><td colspan="4" class="text-center">No entries found</td></tr>';
+            }
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Daily Report - ${reportData.date}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .report-header { margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                    </style>
+                </head>
+                <body>
+                    <div class="report-header">
+                        <h2>Daily Clearance Report</h2>
+                        <p><strong>Staff:</strong> ${reportData.staff}</p>
+                        <p><strong>Date:</strong> ${reportData.date}</p>
+                        <p><strong>Status:</strong> ${reportData.status}</p>
+                        <p><strong>Submitted At:</strong> ${reportData.submitted_at}</p>
+                    </div>
+                    
+                    <div class="report-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Fields Signed</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${entriesHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    '<' + 'script>' +
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(function() { window.close(); }, 500);
+                        }
+                    '</' + 'script>' +
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    });
+</script>
+{% endblock %}
