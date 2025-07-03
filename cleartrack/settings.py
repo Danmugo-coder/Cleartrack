@@ -48,7 +48,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.TrialAndSubscriptionMiddleware",
-    "accounts.middleware.subscription_middleware.SubscriptionMiddleware",
+    'core.middleware.restrict_admin.RestrictAdminAccessMiddleware',
+    "accounts.middleware.subscription_middleware.SubscriptionMiddleware",   
 ]
 
 ROOT_URLCONF = "cleartrack.urls"
