@@ -2,10 +2,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from accounts.views import create_my_superuser  # ✅ Import the view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include(("core.urls", "core"), namespace="core")),  # ✅ register with namespace
+    path("create-superuser/", create_my_superuser),  # ✅ Add this line
+    path("", include(("core.urls", "core"), namespace="core")),
     path("accounts/", include("accounts.urls")),
     path("dashboard/", include("dashboard.urls")),
     path("clearance/", include("clearance.urls")),
