@@ -41,9 +41,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "core.middleware_trial.TrialAndSubscriptionMiddleware",
-    "core.middleware.restrict_admin.RestrictAdminAccessMiddleware",
-    "accounts.middleware.subscription_middleware.SubscriptionMiddleware",
+
+    # ✅ Correct middleware paths based on structure
+    "core.middleware_trial.TrialAndSubscriptionMiddleware",  # file: core/middleware_trial.py
+    "core.middleware.restrict_admin.RestrictAdminAccessMiddleware",  # file: core/middleware/restrict_admin.py
+    "accounts.middleware.subscription_middleware.SubscriptionMiddleware",  # file: accounts/middleware/subscription_middleware.py
 ]
 
 ROOT_URLCONF = "cleartrack.urls"
@@ -119,6 +121,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'danmugo42@gmail.com'       # Your Gmail address
-EMAIL_HOST_PASSWORD = "wwvx narw xyaz sqcl"   # Gmail App Password
+EMAIL_HOST_USER = 'danmugo42@gmail.com'
+EMAIL_HOST_PASSWORD = "wwvx narw xyaz sqcl"
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
