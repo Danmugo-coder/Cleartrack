@@ -21,28 +21,29 @@
     }
 
     .plan-card {
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 30px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        padding: 40px 25px;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
         position: relative;
     }
 
     .plan-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        transform: translateY(-10px);
+        box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
     }
 
     .plan-title {
-        font-size: 1.5rem;
-        font-weight: bold;
+        font-size: 1.75rem;
+        font-weight: 700;
     }
 
     .price {
-        font-size: 2.2rem;
-        font-weight: bold;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #2563eb;
     }
 
     .price small {
@@ -54,36 +55,41 @@
         list-style: none;
         padding: 0;
         margin: 20px 0;
+        font-size: 0.95rem;
     }
 
     .feature-list li {
-        padding: 5px 0;
+        padding: 6px 0;
+        display: flex;
+        align-items: center;
+        justify-content: start;
     }
 
     .choose-btn {
         background-color: #2563eb;
         color: #fff;
-        font-weight: 600;
-        border-radius: 8px;
-        padding: 10px;
-        transition: background 0.3s ease;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 1rem;
+        transition: background 0.3s ease-in-out;
     }
 
     .choose-btn:hover {
-        background-color: #1d4ed8;
+        background-color: #1e40af;
     }
 
     .badge-popular {
         position: absolute;
-        top: -12px;
-        right: -12px;
+        top: -14px;
+        right: -14px;
         background-color: #facc15;
         color: #1a202c;
         font-size: 0.75rem;
-        padding: 4px 8px;
+        padding: 6px 10px;
         border-radius: 999px;
         font-weight: bold;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
     }
 
     .toggle-switch {
@@ -91,6 +97,7 @@
         justify-content: center;
         align-items: center;
         margin-bottom: 30px;
+        font-size: 1rem;
     }
 
     .toggle-switch label {
@@ -147,7 +154,7 @@
 
 <div class="container py-5">
     <div class="text-center mb-5">
-        <h2 class="fw-bold">Choose Your Subscription Plan</h2>
+        <h2 class="fw-bold" style="font-size: 2rem;">Choose Your Subscription Plan</h2>
         <p class="text-muted">Pick a plan that suits your business needs. Toggle for monthly or yearly billing.</p>
         <div class="toggle-switch">
             <label for="billingToggle">Monthly</label>
