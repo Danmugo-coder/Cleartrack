@@ -247,6 +247,8 @@ def create_my_superuser(request):
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.conf import settings
 
 def request_access(request):
     if request.method == 'POST':
@@ -270,8 +272,27 @@ def request_access(request):
             )
             user.is_active = False  # Admin must activate them later
             user.save()
-            messages.success(request, 'Request submitted! Admin will activate your account.')
+
+            # ✅ Send notification email to admin
+            try:
+                send_mail(
+                    subject='[ClearTrack] New Access Request',
+                    message=f'''
+A new user has requested access to ClearTrack.
+
+Name: {first_name} {last_name}
+Email: {email}
+Username: {username}
+
+Please log in to the admin panel to review and activate this user.
+''',
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[settings.EMAIL_HOST_USER],
+                    fail_silently=False
+                )
+                messages.success(request, 'Request submitted! Admin will activate your account.')
+            except Exception as e:
+                messages.error(request, f'Request created, but email failed: {str(e)}')
 
         return redirect(request.META.get('HTTP_REFERER', '/'))
     return redirect('/')
-
