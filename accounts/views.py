@@ -256,17 +256,20 @@ def request_access(request):
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
         username = request.POST.get('username')
-        password = request.POST.get('password')
+        phone = request.POST.get('phone')
+        country = request.POST.get('country')
+        institution = request.POST.get('institution')
 
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Username already exists.')
         elif User.objects.filter(email=email).exists():
             messages.error(request, 'Email already registered.')
         else:
+            # Assign a dummy password since we're not using one yet
             user = User.objects.create_user(
                 username=username,
                 email=email,
-                password=password,
+                password=User.objects.make_random_password(),
                 first_name=first_name,
                 last_name=last_name
             )
@@ -283,6 +286,9 @@ A new user has requested access to ClearTrack.
 Name: {first_name} {last_name}
 Email: {email}
 Username: {username}
+Phone: {phone}
+Country: {country}
+Institution: {institution}
 
 Please log in to the admin panel to review and activate this user.
 ''',

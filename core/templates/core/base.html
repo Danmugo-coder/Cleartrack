@@ -880,7 +880,7 @@
 </body>
 </html> 
 
-<!-- Request Access Modal -->
+<!-- Updated Request Access Modal -->
 <div class="modal fade" id="requestAccessModal" tabindex="-1" aria-labelledby="requestAccessModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form method="post" action="/request-access/" class="modal-content">
@@ -899,22 +899,72 @@
                     <input type="text" class="form-control" id="lastName" name="last_name" required>
                 </div>
                 <div class="mb-3">
-                    <label for="emailAddress" class="form-label">Email Address</label>
-                    <input type="email" class="form-control" id="emailAddress" name="email" required>
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
                 </div>
                 <div class="mb-3">
                     <label for="username" class="form-label">Preferred Username</label>
                     <input type="text" class="form-control" id="username" name="username" required>
                 </div>
                 <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
+                    <label for="phone" class="form-label">Phone Number (with country code)</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="+254712345678" required>
+                </div>
+                <div class="mb-3">
+                    <label for="institution" class="form-label">Institution Name</label>
+                    <input type="text" class="form-control" id="institution" name="institution" required>
+                </div>
+                <div class="mb-3">
+                    <label for="country" class="form-label">Country</label>
+                    <select class="form-select" id="country" name="country" required>
+                        <option value="" disabled selected>Select your country</option>
+                        <optgroup label="Africa">
+                            <option>Kenya</option>
+                            <option>Uganda</option>
+                            <option>Tanzania</option>
+                            <option>Nigeria</option>
+                            <option>South Africa</option>
+                            <option>Ghana</option>
+                            <option>Rwanda</option>
+                            <option>Burundi</option>
+                            <option>DR Congo</option>
+                            <option>Sudan</option>
+                            <option>Somalia</option>
+                            <option>Zimbabwe</option>
+                            <option>Zambia</option>
+                            <option>Malawi</option>
+                            <option>Namibia</option>
+                            <option>Mozambique</option>
+                            <option>Angola</option>
+                            <option>Cameroon</option>
+                            <option>Senegal</option>
+                            <option>Ivory Coast</option>
+                            <option>Ethiopia</option>
+                            <option>Egypt</option>
+                            <option>Libya</option>
+                            <option>Algeria</option>
+                            <option>Morocco</option>
+                            <option>Tunisia</option>
+                        </optgroup>
+                        <optgroup label="Other">
+                            <option>United States</option>
+                            <option>United Kingdom</option>
+                            <option>Canada</option>
+                            <option>India</option>
+                            <option>Germany</option>
+                            <option>France</option>
+                            <option>China</option>
+                            <option>Japan</option>
+                            <option>Brazil</option>
+                            <option>Australia</option>
+                            <!-- Add more if needed -->
+                        </optgroup>
+                    </select>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Submit Request</button>
+                <button type="submit" class="btn btn-primary w-100">Submit Request</button>
             </div>
         </form>
     </div>
 </div>
-
