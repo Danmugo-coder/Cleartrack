@@ -188,22 +188,17 @@
                                 <div class="input-icon">
                                     <i class="fas fa-user"></i>
                                 </div>
-                                <input type="text" class="form-control" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" placeholder="Username" required>
-                                {% if form.username.errors %}
-                                    <div class="text-danger mt-2">{{ form.username.errors }}</div>
-                                {% endif %}
-                            </div>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+"Username" required>
+                          
 
                             <div class="mb-4 position-relative">
                                 <div class="input-icon">
                                     <i class="fas fa-lock"></i>
                                 </div>
-                                <input type="password" class="form-control" id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" placeholder="Password" required>
-                                {% if form.password.errors %}
-                                    <div class="text-danger mt-2">{{ form.password.errors }}</div>
-                                {% endif %}
-                            </div>
-
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+der="Password" required>
+                            
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary login-btn">
                                     <i class="fas fa-sign-in-alt me-2"></i> Sign In
