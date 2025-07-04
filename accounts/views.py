@@ -249,11 +249,12 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail, BadHeaderError
 from django.conf import settings
+from django.contrib.auth.models import BaseUserManager  # ✅ Correct way to get make_random_password
 import logging
 
 logger = logging.getLogger(__name__)
 
-User = get_user_model()  # ✅ Always use this for custom or default user model
+User = get_user_model()
 
 def request_access(request):
     if request.method == 'POST':
@@ -271,11 +272,13 @@ def request_access(request):
             messages.error(request, 'Email already registered.')
         else:
             try:
-                # ✅ Create inactive user with a random password
+                # ✅ Use BaseUserManager to generate password
+                random_password = BaseUserManager().make_random_password()
+
                 user = User.objects.create_user(
                     username=username,
                     email=email,
-                    password=User.objects.make_random_password(),
+                    password=random_password,
                     first_name=first_name,
                     last_name=last_name
                 )
