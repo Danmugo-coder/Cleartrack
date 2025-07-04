@@ -243,3 +243,35 @@ def create_my_superuser(request):
         user.save()
         return HttpResponse("✅ Superuser created. You can now log in at /admin/")
     return HttpResponse("ℹ️ Superuser already exists.")
+
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.contrib.auth.models import User
+
+def request_access(request):
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists.')
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, 'Email already registered.')
+        else:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+            user.is_active = False  # Admin must activate them later
+            user.save()
+            messages.success(request, 'Request submitted! Admin will activate your account.')
+
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+    return redirect('/')
+

@@ -112,7 +112,8 @@
         padding-left: 45px;
     }
 
-    .login-btn {
+    .login-btn,
+    .request-access-btn {
         height: 50px;
         border-radius: 8px;
         font-weight: 500;
@@ -123,6 +124,15 @@
     .login-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(67, 97, 238, 0.4);
+    }
+
+    .request-access-btn {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .request-access-btn:hover {
+        background-color: #5a6268;
     }
 
     .back-home {
@@ -163,6 +173,14 @@
                     </div>
 
                     <div class="login-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} mt-2">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
                         <form method="post">
                             {% csrf_token %}
 
@@ -172,9 +190,7 @@
                                 </div>
                                 <input type="text" class="form-control" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" placeholder="Username" required>
                                 {% if form.username.errors %}
-                                    <div class="text-danger mt-2">
-                                        {{ form.username.errors }}
-                                    </div>
+                                    <div class="text-danger mt-2">{{ form.username.errors }}</div>
                                 {% endif %}
                             </div>
 
@@ -184,15 +200,17 @@
                                 </div>
                                 <input type="password" class="form-control" id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" placeholder="Password" required>
                                 {% if form.password.errors %}
-                                    <div class="text-danger mt-2">
-                                        {{ form.password.errors }}
-                                    </div>
+                                    <div class="text-danger mt-2">{{ form.password.errors }}</div>
                                 {% endif %}
                             </div>
 
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary login-btn">
                                     <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                                </button>
+
+                                <button type="button" class="btn request-access-btn" data-bs-toggle="modal" data-bs-target="#requestAccessModal">
+                                    <i class="fas fa-user-plus me-2"></i> Request Access
                                 </button>
                             </div>
                         </form>
@@ -208,4 +226,42 @@
         </div>
     </div>
 </section>
+
+<!-- Request Access Modal -->
+<div class="modal fade" id="requestAccessModal" tabindex="-1" aria-labelledby="requestAccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="/request-access/" class="modal-content">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="requestAccessModalLabel">Request Access</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="firstName" name="first_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="lastName" name="last_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Preferred Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

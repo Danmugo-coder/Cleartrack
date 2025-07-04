@@ -879,3 +879,42 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html> 
+
+<!-- Request Access Modal -->
+<div class="modal fade" id="requestAccessModal" tabindex="-1" aria-labelledby="requestAccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="/request-access/" class="modal-content">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="requestAccessModalLabel">Request Access</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="firstName" name="first_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="lastName" name="last_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="emailAddress" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="emailAddress" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Preferred Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
