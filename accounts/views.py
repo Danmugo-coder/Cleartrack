@@ -247,8 +247,11 @@ def create_my_superuser(request):
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.core.mail import send_mail, BadHeaderError
 from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)  # ✅ Optional: log any email issues
 
 def request_access(request):
     if request.method == 'POST':
@@ -265,22 +268,21 @@ def request_access(request):
         elif User.objects.filter(email=email).exists():
             messages.error(request, 'Email already registered.')
         else:
-            # Assign a dummy password since we're not using one yet
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=User.objects.make_random_password(),
-                first_name=first_name,
-                last_name=last_name
-            )
-            user.is_active = False  # Admin must activate them later
-            user.save()
-
-            # ✅ Send notification email to admin
             try:
-                send_mail(
-                    subject='[ClearTrack] New Access Request',
-                    message=f'''
+                # ✅ Create user (inactive)
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=User.objects.make_random_password(),
+                    first_name=first_name,
+                    last_name=last_name
+                )
+                user.is_active = False
+                user.save()
+
+                # ✅ Send admin notification
+                email_subject = '[ClearTrack] New Access Request'
+                email_message = f'''
 A new user has requested access to ClearTrack.
 
 Name: {first_name} {last_name}
@@ -291,14 +293,24 @@ Country: {country}
 Institution: {institution}
 
 Please log in to the admin panel to review and activate this user.
-''',
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=[settings.EMAIL_HOST_USER],
+                '''
+
+                send_mail(
+                    email_subject,
+                    email_message,
+                    settings.EMAIL_HOST_USER,
+                    [settings.EMAIL_HOST_USER],
                     fail_silently=False
                 )
+
                 messages.success(request, 'Request submitted! Admin will activate your account.')
+
+            except BadHeaderError:
+                messages.error(request, 'Invalid header found.')
             except Exception as e:
-                messages.error(request, f'Request created, but email failed: {str(e)}')
+                logger.error(f"Error during request_access: {e}")
+                messages.error(request, f'Request created, but email failed: {e}')
 
         return redirect(request.META.get('HTTP_REFERER', '/'))
+
     return redirect('/')

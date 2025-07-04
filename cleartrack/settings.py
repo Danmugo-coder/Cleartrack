@@ -10,10 +10,7 @@ SECRET_KEY = "django-insecure-2c-hfd+r@#b8m9&twvg6xdwg52m_@d@le#^y6u^f^-n!44ic%8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# ALLOWED HOSTS for Render deployment
 ALLOWED_HOSTS = ['cleartrack-aly9.onrender.com', '.onrender.com']
-
-# CSRF trusted domains
 CSRF_TRUSTED_ORIGINS = ['https://cleartrack-aly9.onrender.com']
 
 # Application definition
@@ -34,7 +31,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # For static file handling
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -42,10 +39,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
-    # ✅ Correct middleware paths based on structure
-    "core.middleware_trial.TrialAndSubscriptionMiddleware",  # file: core/middleware_trial.py
-    "core.middleware.restrict_admin.RestrictAdminAccessMiddleware",  # file: core/middleware/restrict_admin.py
-    "accounts.middleware.subscription_middleware.SubscriptionMiddleware",  # file: accounts/middleware/subscription_middleware.py
+    # Custom middleware
+    "core.middleware_trial.TrialAndSubscriptionMiddleware",
+    "core.middleware.restrict_admin.RestrictAdminAccessMiddleware",
+    "accounts.middleware.subscription_middleware.SubscriptionMiddleware",
 ]
 
 ROOT_URLCONF = "cleartrack.urls"
@@ -103,24 +100,41 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Login URLs
+# Auth settings
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
-# Site URL
-SITE_URL = 'https://cleartrack.onrender.com'
+# Site domain
+SITE_URL = 'https://cleartrack-aly9.onrender.com'
 
-# PayPal Settings
-PAYPAL_MODE = 'sandbox'  # Change to 'live' in production
+# PayPal config (ignore if not using yet)
+PAYPAL_MODE = 'sandbox'
 PAYPAL_CLIENT_ID = 'AbTgDTWEV3u0ijhMqeJ3zrgjRmol3b-aiPLxH-H1XKnIQ1B4WB_8nQFbSWTXVMgd8OUE4qgBknEjxz0T'
 PAYPAL_CLIENT_SECRET = 'EFkEGB_hogOkUgdn3ggtQQMCh7pEU3xCx_Fi7rb7JRkLhBlwJjNY1RGJp5ZX1chfJBLgyv9xot8ucnel'
 
-# Email Configuration (Gmail SMTP)
+# ✅ Email Configuration for Gmail SMTP
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'danmugo42@gmail.com'
-EMAIL_HOST_PASSWORD = "wwvx narw xyaz sqcl"
+EMAIL_HOST_PASSWORD = 'wwvx narw xyaz sqcl'  # App password from Gmail
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# ✅ Optional Logging to help debug errors (can remove later)
+import logging
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+}
