@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from .views import request_demo_view
 from .views import create_my_superuser
+from .views import request_access  # ✅ Add this if not already present
 
 app_name = 'accounts'
 
@@ -16,4 +17,5 @@ urlpatterns = [
     path('subscription/', views.subscription_view, name='subscription'),
     path('request-demo/', views.request_demo_view, name='request_demo'),
     path('create-my-admin/', views.create_my_superuser, name='create_my_superuser'),
+    path('request-access/', request_access, name='request_access'),  # ✅ REQUIRED
 ]
