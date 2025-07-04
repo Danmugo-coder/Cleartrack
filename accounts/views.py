@@ -246,12 +246,14 @@ def create_my_superuser(request):
 
 from django.shortcuts import redirect
 from django.contrib import messages
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.mail import send_mail, BadHeaderError
 from django.conf import settings
 import logging
 
-logger = logging.getLogger(__name__)  # ✅ Optional: log any email issues
+logger = logging.getLogger(__name__)
+
+User = get_user_model()  # ✅ Always use this for custom or default user model
 
 def request_access(request):
     if request.method == 'POST':
@@ -269,7 +271,7 @@ def request_access(request):
             messages.error(request, 'Email already registered.')
         else:
             try:
-                # ✅ Create user (inactive)
+                # ✅ Create inactive user with a random password
                 user = User.objects.create_user(
                     username=username,
                     email=email,
@@ -280,9 +282,9 @@ def request_access(request):
                 user.is_active = False
                 user.save()
 
-                # ✅ Send admin notification
-                email_subject = '[ClearTrack] New Access Request'
-                email_message = f'''
+                # ✅ Compose and send email
+                subject = '[ClearTrack] New Access Request'
+                message = f'''
 A new user has requested access to ClearTrack.
 
 Name: {first_name} {last_name}
@@ -296,8 +298,8 @@ Please log in to the admin panel to review and activate this user.
                 '''
 
                 send_mail(
-                    email_subject,
-                    email_message,
+                    subject,
+                    message,
                     settings.EMAIL_HOST_USER,
                     [settings.EMAIL_HOST_USER],
                     fail_silently=False
@@ -306,10 +308,10 @@ Please log in to the admin panel to review and activate this user.
                 messages.success(request, 'Request submitted! Admin will activate your account.')
 
             except BadHeaderError:
-                messages.error(request, 'Invalid header found.')
+                messages.error(request, 'Invalid header found in the email.')
             except Exception as e:
-                logger.error(f"Error during request_access: {e}")
-                messages.error(request, f'Request created, but email failed: {e}')
+                logger.error(f"Email sending failed: {e}")
+                messages.error(request, f'Request created, but email failed to send: {e}')
 
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
